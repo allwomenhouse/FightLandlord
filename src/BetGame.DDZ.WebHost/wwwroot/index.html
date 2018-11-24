@@ -63,7 +63,7 @@
 						class="poker"
 						:style="{ cursor: 'pointer', 
 						left: (pkIndex + 1) * 25 + 'px',
-						top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '-32px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? '#483f3f' : 'rgb(119, 11, 11)'),}"
+						top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '-32px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
 					  >{{pk}}</span>
 				</div>
 				<div style="float:right;">
@@ -92,12 +92,12 @@
 					<p slot="title">底牌</p>
 					<p>
 						<span v-for="(pk, pkIndex) in ddzdata.dipaiText"
-						:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.dipai[pkIndex] < 53 && (ddzdata.dipai[pkIndex] % 4 == 1 || ddzdata.dipai[pkIndex] % 4 == 3) || ddzdata.dipai[pkIndex] == 52 ? '#483f3f' : 'rgb(119, 11, 11)'),}"
+						:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.dipai[pkIndex] < 53 && (ddzdata.dipai[pkIndex] % 4 == 1 || ddzdata.dipai[pkIndex] % 4 == 3) || ddzdata.dipai[pkIndex] == 52 ? 'black' : 'red'),}"
 						>{{pk}}</span>
 	
 						<span v-if="ddzdata.chupai.length > 0" style="margin-left:120px;">
 							<span v-for="(pk, pkIndex) in ddzdata.chupai[ddzdata.chupai.length - 1].result.text"
-							:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? '#483f3f' : 'rgb(119, 11, 11)'),}"
+							:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? 'black' : 'red'),}"
 							>{{pk}}</span>
 						</span>
 	
