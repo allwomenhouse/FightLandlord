@@ -29,7 +29,7 @@ namespace BetGame.DDZ.WebHost.Controllers
 
 		}
 		void DDZOnGameOver(string id, GameInfo data) {
-
+			
 		}
 
 		[HttpPost("StartAndShuffle")]

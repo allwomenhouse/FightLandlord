@@ -87,10 +87,11 @@
 							<Button v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(player.id)" type="primary">不要</Button>
 						</span>
 					</p>
-					<p>
+					<p style="height:180px;">
 						<span v-for="(pk, pkIndex) in player.pokerText"
 							  @click="clickPoker(player.poker[pkIndex])"
-							  :style="{ fontSize: '120px', cursor: 'pointer', color: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? 'blue' : (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
+							  class="poker"
+							  :style="{ cursor: 'pointer', left: (pkIndex * 33) + 'px', top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '28px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
 							>{{pk}}</span>
 					</p>
 				</Card>
@@ -98,6 +99,17 @@
 		</div>
 	</div>
 
+	<style>
+		.poker {
+			background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAABwCAIAAADZkRrTAAABJ0lEQVR4Ae3SsRHAMAzDwDj776ycJ0CL6OCWDcX3mZln9XtXX3eP68L/E2eYoX+BfqnfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn+83/AAqIwPd7cMfYwAAAABJRU5ErkJggg==");
+			background-position: 3px 36px;
+			background-repeat: no-repeat;
+			position: absolute;
+			margin: 0px;
+			font-size: 120px;
+			height: 160px;
+		}
+	</style>
 	<script>
 
 		function initvue11() {
