@@ -58,9 +58,12 @@
 		<div v-if="stage == '叫地主' || stage == '斗地主'" v-for="(player, playerIndex) in ddzdata.players">
 			<div style="padding: 20px 20px 0px 20px; height:260px; border:1px solid #ddd;">
 				<div style="float:left; width:70%; position: relative;">
-					<span v-for="(pk, pkIndex, pkleft) in player.pokerText"
-						@click="clickPoker(player.poker[pkIndex])"
+					<span v-for="(pk, pkIndex) in player.pokerText"
+						@mousedown="mousedownPoker(player, pkIndex, player.poker[pkIndex])"
+						@mousemove="mousemovePoker(player, pkIndex, player.poker[pkIndex])"
+						@mouseup="mouseupPoker(player, pkIndex, player.poker[pkIndex])"
 						class="poker"
+						unselectable="on"
 						:style="{ cursor: 'pointer', 
 						left: (pkIndex + 1) * 32 + 'px',
 						top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '-32px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
@@ -123,6 +126,12 @@
 			margin: 0px;
 			font-size: 180px;
 			height: 220px;
+			-webkit-touch-callout: none; /* iOS Safari */
+			-webkit-user-select: none; /* Chrome/Safari/Opera */
+			-khtml-user-select: none; /* Konqueror */
+			-moz-user-select: none; /* Firefox */
+			-ms-user-select: none; /* Internet Explorer/Edge */
+			user-select: none; /* Non-prefixed version, currently not supported by any browser */
 		}
 		button {
 			padding: 9px;
@@ -178,7 +187,8 @@
 						]
 					},
 
-
+					mouseDownPlayer: null,
+					mouseDownPlayerIndex: 0,
 				},
 
 				computed: {
@@ -194,6 +204,25 @@
 						else this.selectedPokers[pk] = 1;
 						this.updateindex++;
 					},
+					mousedownPoker(player, index, pk) {
+						this.mouseDownPlayer = player;
+						this.mouseDownPlayerIndex = index;
+					},
+					mousemovePoker(player, index, pk) {
+						
+					},
+					mouseupPoker(player, index, pk) {
+						if (this.mouseDownPlayer === player) {
+							var min = Math.min(this.mouseDownPlayerIndex, index);
+							var max = Math.max(this.mouseDownPlayerIndex, index);
+							for (var a = min; a <= max; a++) {
+								if (this.selectedPokers[player.poker[a]]) delete this.selectedPokers[player.poker[a]];
+								else this.selectedPokers[player.poker[a]] = 1;
+							}
+							this.updateindex++;
+						}
+					},
+
 					StartAndShuffle() {
 						this.starting = true;
 						var playerIds = [];
