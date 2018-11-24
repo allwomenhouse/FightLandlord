@@ -18,10 +18,9 @@
 
 	<div id="app">
 
-		<div v-if="stage == '未开始'" style="background:#eee;padding: 20px">
+		<div v-if="stage == '未开始'" style="background:#eee;">
 			<Card :bordered="false">
-				<p slot="title">准备开始游戏</p>
-				<p>Content of no border type. Content of no border type. Content of no border type. Content of no border type. </p>
+				<p slot="title">准备开始游戏(.NETCore + HTML5)</p>
 				<p><Input v-model="playerIds[0]" placeholder="Enter something..." style="width:300px" /></p>
 				<p><Input v-model="playerIds[1]" placeholder="Enter something..." style="width:300px" /></p>
 				<p><Input v-model="playerIds[2]" placeholder="Enter something..." style="width:300px" /></p>
@@ -42,7 +41,7 @@
 			</Card>
 		</div>
 
-		<div v-if="stage == '斗地主' || stage == '游戏结束'" style="background:#eee;padding: 20px">
+		<div v-if="stage == '斗地主' || stage == '游戏结束'" style="background:#eee;padding: 20px 20px 0px 20px;">
 			<Card :bordered="false">
 				<p slot="title">底牌</p>
 				<p>
@@ -69,33 +68,32 @@
 		</div>
 
 		<div v-if="stage == '叫地主' || stage == '斗地主'" v-for="(player, playerIndex) in ddzdata.players">
-			<div style="background:#eee;padding: 20px">
-				<Card :bordered="false">
-					<p slot="title">
-						{{player.id}} <span :style="{ color: player.role == '地主' ? 'red' : player.role == '农民' ? 'green' : '#aaa'}">【{{player.role}}】</span>
+			<div style="padding: 20px 20px 0px 20px; height:200px; border:1px solid #ddd;">
+				<div style="float:left; width:70%; position: relative;">
+					<span v-for="(pk, pkIndex) in player.pokerText"
+						@click="clickPoker(player.poker[pkIndex])"
+						class="poker"
+						:style="{ cursor: 'pointer', left: ((pkIndex + 1) * 33) + 'px', top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '-32px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
+					  >{{pk}}</span>
+				</div>
+				<div style="float:right;">
+					<p style="text-align: right;">{{player.id}} <span :style="{ color: player.role == '地主' ? 'red' : player.role == '农民' ? 'green' : '#aaa'}">【{{player.role}}】</span></p>
 
-						<span v-if="stage == '叫地主' && playerIndex == ddzdata.playerIndex">
-							<Button v-for="maddtion in ddzdata.multipleAdditionMax"
-									v-if="maddtion > ddzdata.multipleAddition" @click="SelectLandlord(player.id, maddtion)" type="primary">
-								{{maddtion}}分
-							</Button>
-							<Button @click="SelectFarmer(player.id)" type="primary">不叫</Button>
-						</span>
+					<p v-if="stage == '叫地主' && playerIndex == ddzdata.playerIndex" style="margin-top:36px;">
+						<Button v-for="maddtion in ddzdata.multipleAdditionMax"
+								v-if="maddtion > ddzdata.multipleAddition" @click="SelectLandlord(player.id, maddtion)" type="primary">
+							{{maddtion}}分
+						</Button>
+						<Button @click="SelectFarmer(player.id)" type="primary">不叫</Button>
+					</p>
 
-						<span v-if="stage == '斗地主' && playerIndex == ddzdata.playerIndex">
-							<Button @click="Play(player.id)" type="primary">出牌</Button>
-							<Button @click="PlayTips(player.id)" type="primary">提示</Button>
-							<Button v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(player.id)" type="primary">不要</Button>
-						</span>
+					<p v-if="stage == '斗地主' && playerIndex == ddzdata.playerIndex" style="margin-top:36px;">
+						<Button @click="Play(player.id)" type="primary">出牌</Button>
+						<Button @click="PlayTips(player.id)" type="primary">提示</Button>
+						<Button v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(player.id)" type="primary">不要</Button>
 					</p>
-					<p style="height:180px;">
-						<span v-for="(pk, pkIndex) in player.pokerText"
-							  @click="clickPoker(player.poker[pkIndex])"
-							  class="poker"
-							  :style="{ cursor: 'pointer', left: ((pkIndex + 1) * 33) + 'px', top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '28px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
-							>{{pk}}</span>
-					</p>
-				</Card>
+				</div>
+				<div style="clear:both;"></div>
 			</div>
 		</div>
 	</div>
@@ -109,6 +107,10 @@
 			margin: 0px;
 			font-size: 120px;
 			height: 160px;
+		}
+		button {
+			padding: 9px;
+			
 		}
 	</style>
 	<script>

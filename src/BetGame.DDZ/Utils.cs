@@ -141,8 +141,10 @@ namespace BetGame.DDZ {
 			}
 			if (type == HandPokerType.四条炸 ||
 				type == HandPokerType.王炸) {
-				var pk = gb.First().poker.OrderByDescending(a => a).ToArray();
-				return new HandPokerComplieResult { type = type, compareValue = gb.First().key, value = pk, text = GetPokerText(pk) };
+				var tmp = new List<int>();
+				foreach (var g in gb) tmp.AddRange(g.poker.OrderByDescending(a => a));
+				var value = tmp.ToArray();
+				return new HandPokerComplieResult { type = type, compareValue = gb.First().key, value = value, text = GetPokerText(value) };
 			}
 			throw new ArgumentException("GetHandPokerComplieResult 参数错误");
 		}
