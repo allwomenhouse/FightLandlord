@@ -435,7 +435,7 @@ namespace BetGame.DDZ {
 				return ret;
 			}
 			if (uphand.result.type == HandPokerType.顺子) {
-				var gbs = gb.Where(a => a.count < 4 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length).OrderBy(a => a.key).ToArray().AsSpan();
+				var gbs = gb.Where(a => a.count < 4 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length + 1).OrderBy(a => a.key).ToArray().AsSpan();
 				if (gbs.IsEmpty == false) {
 					for (var a = 0; a < gbs.Length && gbs.Length - a >= uphand.result.value.Length; a++) {
 						var ses = gbs.Slice(a, uphand.result.value.Length).ToArray();
@@ -448,7 +448,7 @@ namespace BetGame.DDZ {
 				return ret;
 			}
 			if (uphand.result.type == HandPokerType.连对) {
-				var gbs = gb.Where(a => a.count > 1 && a.count < 4 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length).OrderBy(a => a.key).ToArray().AsSpan();
+				var gbs = gb.Where(a => a.count > 1 && a.count < 4 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length / 2 + 1).OrderBy(a => a.key).ToArray().AsSpan();
 				if (gbs.IsEmpty == false) {
 					for (var a = 0; a < gbs.Length && gbs.Length - a >= uphand.result.value.Length / 2; a++) {
 						var ses = gbs.Slice(a, uphand.result.value.Length / 2).ToArray();
@@ -465,7 +465,7 @@ namespace BetGame.DDZ {
 				return ret;
 			}
 			if (uphand.result.type == HandPokerType.飞机) {
-				var gbs = gb.Where(a => a.count >= 3 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length).OrderBy(a => a.key).ToArray().AsSpan();
+				var gbs = gb.Where(a => a.count >= 3 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length / 3 + 1).OrderBy(a => a.key).ToArray().AsSpan();
 				if (gbs.IsEmpty == false) {
 					for (var a = 0; a < gbs.Length && gbs.Length - a >= uphand.result.value.Length / 3; a++) {
 						var ses = gbs.Slice(a, uphand.result.value.Length / 3).ToArray();
@@ -482,7 +482,7 @@ namespace BetGame.DDZ {
 				return ret;
 			}
 			if (uphand.result.type == HandPokerType.飞机带个) {
-				var gbs = gb.Where(a => a.count >= 3 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length).OrderBy(a => a.key).ToArray().AsSpan();
+				var gbs = gb.Where(a => a.count >= 3 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length / 4 + 1).OrderBy(a => a.key).ToArray().AsSpan();
 				if (gbs.IsEmpty == false) {
 					for (var a = 0; a < gbs.Length && gbs.Length - a >= uphand.result.value.Length / 4; a++) {
 						var ses = gbs.Slice(a, uphand.result.value.Length / 4).ToArray();
@@ -513,7 +513,7 @@ namespace BetGame.DDZ {
 				return ret;
 			}
 			if (uphand.result.type == HandPokerType.飞机带队) {
-				var gbs = gb.Where(a => a.count >= 3 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length).OrderBy(a => a.key).ToArray().AsSpan();
+				var gbs = gb.Where(a => a.count >= 3 && a.key < 15 && a.key > uphand.result.compareValue - uphand.result.value.Length / 5 + 1).OrderBy(a => a.key).ToArray().AsSpan();
 				if (gbs.IsEmpty == false) {
 					for (var a = 0; a < gbs.Length && gbs.Length - a >= uphand.result.value.Length / 5; a++) {
 						var ses = gbs.Slice(a, uphand.result.value.Length / 5).ToArray();
