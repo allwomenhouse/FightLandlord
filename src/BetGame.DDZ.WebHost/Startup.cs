@@ -26,7 +26,7 @@ namespace BetGame.DDZ.WebHost
 				return st;
 			};
 
-			RedisHelper.Initialization(new CSRedis.CSRedisClient("127.0.0.1:6379,password=,defaultDatabase=11,poolsize=5"));
+			RedisHelper.Initialization(new CSRedis.CSRedisClient(configuration["redis"]));
 		}
 
         public IConfiguration Configuration { get; }
