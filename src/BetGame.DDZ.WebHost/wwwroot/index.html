@@ -56,10 +56,13 @@
 						>{{pk}}</span>
 					</span>
 
-					<span v-if="stage == '游戏结束'" style="margin-left:120px;">
+					<span v-if="stage == '游戏结束' && ddzdata.chupai.length > 0" style="margin-left:120px;">
 						游戏结束, 【{{ddzdata.players[ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex].role}}】 胜利, 
 						
 						炸弹: {{ddzdata.bong}}, 倍数: {{ddzdata.multipleAddition}}, 金额: {{(ddzdata.bong + 1) * ddzdata.multipleAddition * ddzdata.multiple}}。
+					</span>
+					<span v-if="stage == '游戏结束' && ddzdata.chupai.length == 0" style="margin-left:120px;">
+						游戏结束，没有人当【地主】。
 					</span>
 				</p>
 			</Card>

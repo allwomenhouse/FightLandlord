@@ -162,9 +162,19 @@ namespace BetGame.DDZ
 					if (++this.Data.playerIndex >= this.Data.players.Count) this.Data.playerIndex = 0;
 					if (this.Data.players[this.Data.playerIndex].role == GamePlayerRole.未知) break; //跳过已确定的农民
 				}
-				this.EventSave();
-				WriteLog($"{this.Data.players[playerIndex].id} 【叫地主】 +{this.Data.multipleAddition}倍，轮到 {this.Data.players[this.Data.playerIndex].id} 叫地主");
-				this.OnNextSelect?.Invoke(this.Id, this.Data);
+				if (this.Data.playerIndex == playerIndex) {
+					this.Data.players[this.Data.playerIndex].role = GamePlayerRole.地主;
+					this.Data.players[this.Data.playerIndex].poker.AddRange(this.Data.dipai);
+					this.Data.players[this.Data.playerIndex].poker.Sort((x, y) => y.CompareTo(x));
+					this.Data.stage = GameStage.斗地主;
+					this.EventSave();
+					WriteLog($"{this.Data.players[this.Data.playerIndex].id} 附加倍数{multiple}【叫地主】成功，进入【斗地主】环节，轮到庄家 {this.Data.players[this.Data.playerIndex].id} 出牌");
+					this.OnNextSelect?.Invoke(this.Id, this.Data);
+				} else {
+					this.EventSave();
+					WriteLog($"{this.Data.players[playerIndex].id} 【叫地主】 +{this.Data.multipleAddition}倍，轮到 {this.Data.players[this.Data.playerIndex].id} 叫地主");
+					this.OnNextSelect?.Invoke(this.Id, this.Data);
+				}
 			}
 		}
 		/// <summary>
