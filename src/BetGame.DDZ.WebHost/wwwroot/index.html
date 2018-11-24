@@ -41,32 +41,6 @@
 			</Card>
 		</div>
 
-		<div v-if="stage == '斗地主' || stage == '游戏结束'" style="background:#eee;padding: 20px 20px 0px 20px;">
-			<Card :bordered="false">
-				<p slot="title">底牌</p>
-				<p>
-					<span v-for="(pk, pkIndex) in ddzdata.dipaiText"
-					:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.dipai[pkIndex] < 53 && (ddzdata.dipai[pkIndex] % 4 == 1 || ddzdata.dipai[pkIndex] % 4 == 3) || ddzdata.dipai[pkIndex] == 52 ? 'black' : 'red'),}"
-					>{{pk}}</span>
-
-					<span v-if="ddzdata.chupai.length > 0" style="margin-left:120px;">
-						<span v-for="(pk, pkIndex) in ddzdata.chupai[ddzdata.chupai.length - 1].result.text"
-						:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? 'black' : 'red'),}"
-						>{{pk}}</span>
-					</span>
-
-					<span v-if="stage == '游戏结束' && ddzdata.chupai.length > 0" style="margin-left:120px;">
-						游戏结束, 【{{ddzdata.players[ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex].role}}】 胜利, 
-						
-						炸弹: {{ddzdata.bong}}, 倍数: {{ddzdata.multipleAddition}}, 金额: {{(ddzdata.bong + 1) * ddzdata.multipleAddition * ddzdata.multiple}}。
-					</span>
-					<span v-if="stage == '游戏结束' && ddzdata.chupai.length == 0" style="margin-left:120px;">
-						游戏结束，没有人当【地主】。
-					</span>
-				</p>
-			</Card>
-		</div>
-
 		<div v-if="stage == '叫地主' || stage == '斗地主'" v-for="(player, playerIndex) in ddzdata.players">
 			<div style="padding: 20px 20px 0px 20px; height:200px; border:1px solid #ddd;">
 				<div style="float:left; width:70%; position: relative;">
@@ -88,14 +62,40 @@
 					</p>
 
 					<p v-if="stage == '斗地主' && playerIndex == ddzdata.playerIndex" style="margin-top:36px;">
+						<Button v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(player.id)" type="primary">不要</Button>
 						<Button @click="Play(player.id)" type="primary">出牌</Button>
 						<Button @click="PlayTips(player.id)" type="primary">提示</Button>
-						<Button v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(player.id)" type="primary">不要</Button>
 					</p>
 				</div>
 				<div style="clear:both;"></div>
 			</div>
 		</div>
+
+		<div v-if="stage == '斗地主' || stage == '游戏结束'" style="background:#eee;padding: 20px 20px 0px 20px;">
+				<Card :bordered="false">
+					<p slot="title">底牌</p>
+					<p>
+						<span v-for="(pk, pkIndex) in ddzdata.dipaiText"
+						:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.dipai[pkIndex] < 53 && (ddzdata.dipai[pkIndex] % 4 == 1 || ddzdata.dipai[pkIndex] % 4 == 3) || ddzdata.dipai[pkIndex] == 52 ? 'black' : 'red'),}"
+						>{{pk}}</span>
+	
+						<span v-if="ddzdata.chupai.length > 0" style="margin-left:120px;">
+							<span v-for="(pk, pkIndex) in ddzdata.chupai[ddzdata.chupai.length - 1].result.text"
+							:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? 'black' : 'red'),}"
+							>{{pk}}</span>
+						</span>
+	
+						<span v-if="stage == '游戏结束' && ddzdata.chupai.length > 0" style="margin-left:120px;">
+							游戏结束, 【{{ddzdata.players[ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex].role}}】 胜利, 
+							
+							炸弹: {{ddzdata.bong}}, 倍数: {{ddzdata.multipleAddition}}, 金额: {{(ddzdata.bong + 1) * ddzdata.multipleAddition * ddzdata.multiple}}。
+						</span>
+						<span v-if="stage == '游戏结束' && ddzdata.chupai.length == 0" style="margin-left:120px;">
+							游戏结束，没有人当【地主】。
+						</span>
+					</p>
+				</Card>
+			</div>
 	</div>
 
 	<style>
