@@ -91,7 +91,7 @@
 						<span v-for="(pk, pkIndex) in player.pokerText"
 							  @click="clickPoker(player.poker[pkIndex])"
 							  class="poker"
-							  :style="{ cursor: 'pointer', left: (pkIndex * 33) + 'px', top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '28px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
+							  :style="{ cursor: 'pointer', left: ((pkIndex + 1) * 33) + 'px', top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '28px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
 							>{{pk}}</span>
 					</p>
 				</Card>
@@ -102,7 +102,7 @@
 	<style>
 		.poker {
 			background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAABwCAIAAADZkRrTAAABJ0lEQVR4Ae3SsRHAMAzDwDj776ycJ0CL6OCWDcX3mZln9XtXX3eP68L/E2eYoX+BfqnfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn+83/AAqIwPd7cMfYwAAAABJRU5ErkJggg==");
-			background-position: 3px 36px;
+			background-position: 3px 32px;
 			background-repeat: no-repeat;
 			position: absolute;
 			margin: 0px;
