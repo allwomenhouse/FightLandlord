@@ -213,213 +213,20 @@ namespace BetGame.DDZ
 				this.OnNextSelect?.Invoke(this.Id, this.Data);
 			}
 		}
-		
-		public HandPokerComplieResult ComplierHandPoker(int[] pokerNoneSort) {
-			if (pokerNoneSort == null || pokerNoneSort.Length == 0) return null;
-			var poker = pokerNoneSort.OrderBy(a => a).ToArray();
-			var gb = Utils.GroupByPoker(poker);
-
-			if (poker.Length == 1) { //个
-				return Utils.GetHandPokerComplieResult(HandPokerType.个, gb);
-			}
-			if (poker.Length == 2) { //对，王炸
-				if (gb.Where(a => a.count == 2).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.对, gb);
-				if (gb.Where(a => a.key == 16 || a.key == 17).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.王炸, gb);
-			}
-			if (poker.Length == 3) { //三条
-				if (gb.Where(a => a.count == 3).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.三条, gb);
-			}
-			if (poker.Length == 4) { //四条炸，三条带一个，炸带二个
-				if (gb.Where(a => a.count == 4).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.四条炸, gb);
-				if (gb.Where(a => a.count == 3).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.三条带一个, gb);
-				if (gb.Where(a => a.key == 16 || a.key == 17).Count() == 2) return Utils.GetHandPokerComplieResult(HandPokerType.炸带二个, gb);
-			}
-			if (poker.Length == 5) { //顺子，三条带一对
-				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
-				if (gb1.Length == 5 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
-				if (gb.Where(a => a.count == 3).Any() && gb.Where(a => a.count == 2).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.三条带一对, gb);
-			}
-			if (poker.Length == 6) { //顺子，连对，飞机，炸带二个
-				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
-				if (gb1.Length == 6 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
-
-				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
-				if (gb2.Length == 3 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
-
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 2 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
-
-				if (gb.Where(a => a.count == 4).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.炸带二个, gb);
-				if (gb.Where(a => a.key == 16 || a.key == 17).Count() == 2 && gb.Select(a => a.count == 2).Count() == 2) return Utils.GetHandPokerComplieResult(HandPokerType.炸带二个, gb);
-			}
-			if (poker.Length == 7) { //顺子
-				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
-				if (gb1.Length == 7 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
-			}
-			if (poker.Length == 8) { //顺子，连对，飞机带个，炸带二对
-				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
-				if (gb1.Length == 8 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
-
-				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
-				if (gb2.Length == 4 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
-
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 2 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带个, gb);
-
-				if (gb.Where(a => a.count == 4).Any() && gb.Where(a => a.count == 2).Count() == 2) return Utils.GetHandPokerComplieResult(HandPokerType.炸带二对, gb);
-			}
-			if (poker.Length == 9) { //顺子，飞机
-				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
-				if (gb1.Length == 9 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
-
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 3 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
-			}
-			if (poker.Length == 10) { //顺子，连对，飞机带队
-				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
-				if (gb1.Length == 10 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
-
-				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
-				if (gb2.Length == 5 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
-
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 2 && Utils.IsSeries(gb3) && gb.Where(a => a.count == 2).Count() == 2) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带队, gb);
-			}
-			if (poker.Length == 11) { //顺子
-				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
-				if (gb1.Length == 11 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
-			}
-			if (poker.Length == 12) { //顺子，连对，飞机，飞机带个
-				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
-				if (gb1.Length == 12 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
-
-				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
-				if (gb2.Length == 6 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
-
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 4 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
-				if (gb3.Length == 3 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带个, gb);
-			}
-			if (poker.Length == 14) { //连对
-				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
-				if (gb2.Length == 7 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
-			}
-			if (poker.Length == 15) { //飞机，飞机带队
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 5 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
-				if (gb3.Length == 3 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带队, gb);
-			}
-			if (poker.Length == 16) { //连对，飞机带个
-				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
-				if (gb2.Length == 8 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
-
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 4 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带个, gb);
-			}
-			if (poker.Length == 18) { //连对，飞机
-				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
-				if (gb2.Length == 9 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
-
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 6 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
-			}
-			if (poker.Length == 20) { //连对，飞机带个，飞机带队
-				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
-				if (gb2.Length == 10 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
-
-				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
-				if (gb3.Length == 5 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带个, gb);
-				if (gb3.Length == 4 && Utils.IsSeries(gb3) && gb.Where(a => a.count == 2).Count() == 4) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带队, gb);
-			}
-			return null;
-		}
-		public int CompareHandPoker(HandPokerInfo poker1, HandPokerInfo poker2) {
-			switch (poker2.result.type) {
-				case HandPokerType.个:
-				case HandPokerType.对:
-				case HandPokerType.三条:
-				case HandPokerType.三条带一个:
-				case HandPokerType.三条带一对:
-					if (poker1.result.type == poker2.result.type) return poker1.result.compareValue.CompareTo(poker2.result.compareValue);
-					if (poker1.result.type == HandPokerType.四条炸 || poker1.result.type == HandPokerType.王炸) return 1;
-					return -1;
-				case HandPokerType.顺子:
-				case HandPokerType.连对:
-				case HandPokerType.飞机:
-				case HandPokerType.飞机带个:
-				case HandPokerType.飞机带队:
-					if (poker1.result.type == poker2.result.type && poker1.result.value.Length == poker1.result.value.Length) return poker1.result.compareValue.CompareTo(poker2.result.compareValue);
-					if (poker1.result.type == HandPokerType.四条炸 || poker1.result.type == HandPokerType.王炸) return 1;
-					return -1;
-				case HandPokerType.炸带二个:
-				case HandPokerType.炸带二对:
-					if (poker1.result.type == poker2.result.type) return poker1.result.compareValue.CompareTo(poker2.result.compareValue);
-					if (poker1.result.type == HandPokerType.四条炸 || poker1.result.type == HandPokerType.王炸) return 1;
-					return -1;
-				case HandPokerType.四条炸:
-				case HandPokerType.王炸:
-					if (poker1.result.type == poker2.result.type) return poker1.result.compareValue.CompareTo(poker2.result.compareValue);
-					if (poker1.result.type == HandPokerType.四条炸 || poker1.result.type == HandPokerType.王炸) return 1;
-					return -1;
-			}
-			return -1;
-		}
 
 		/// <summary>
 		/// 提示出牌
 		/// </summary>
 		/// <param name="playerId"></param>
 		/// <returns></returns>
-		public int[] PlayTips(string playerId) {
+		public List<int[]> PlayTips(string playerId) {
 			if (this.Data.stage != GameStage.斗地主) throw new ArgumentException($"游戏阶段错误，当前阶段：{this.Data.stage}");
 			var playerIndex = this.Data.players.FindIndex(a => a.id == playerId);
 			if (playerIndex == -1) throw new ArgumentException($"{playerId} 不在本局游戏");
 			if (playerIndex != this.Data.playerIndex) throw new ArgumentException($"还没有轮到 {playerId} 出牌");
-			var uphand = this.Data.chupai.Last();
-			var my = this.Data.players[this.Data.playerIndex];
-			if (uphand == null || uphand.playerIndex == this.Data.playerIndex) {
-				//出最小的，或者出顺子组合之类
-				return new[] { my.poker.Min() };
-			}
-			var ps = new int[my.poker.Count];
-			//for (var a = 0; a < ps.Length; a++) ps[a] = this.GetPoker(my.poker[a]);
-
-			//var gb = ps.GroupBy(c => c).Select(c => new { key = c.Key, count = c.Count() }).OrderBy(c => c.key);
-			//switch (uphand.result.type) {
-			//	case HandPokerType.个:
-			//		var gb1 = gb.Where(a => a.count == 1 && a.key > uphand.result.compareValue);
-			//		if (gb1.Any()) return new byte[] { gb1.Select(a => a.key).Min() };
-			//		var gb2 = gb.Where(a => a.count == 2 && a.key > uphand.result.compareValue);
-			//		if (gb2.Any()) return new byte[] { gb1.Select(a => a.key).Min() };
-
-			//	case HandPokerType.对:
-			//		return new[] { gb.Where(a => a.count == 2 && a.key > uphand.result.compareValue).Select(a => a.key).Min() };
-			//	case HandPokerType.三条:
-			//	case HandPokerType.三条带一个:
-			//	case HandPokerType.三条带一对:
-			//		if (poker1.result.type == poker2.result.type) return poker1.result.compareValue.CompareTo(poker2.result.compareValue);
-			//		if (poker1.result.type == HandPokerType.四条炸 || poker1.result.type == HandPokerType.王炸) return 1;
-			//		return -1;
-			//	case HandPokerType.顺子:
-			//	case HandPokerType.连对:
-			//	case HandPokerType.飞机:
-			//	case HandPokerType.飞机带个:
-			//	case HandPokerType.飞机带队:
-			//		if (poker1.result.type == poker2.result.type && poker1.value.Length == poker1.value.Length) return poker1.result.compareValue.CompareTo(poker2.result.compareValue);
-			//		if (poker1.result.type == HandPokerType.四条炸 || poker1.result.type == HandPokerType.王炸) return 1;
-			//		return -1;
-			//	case HandPokerType.炸带二个:
-			//	case HandPokerType.炸带二对:
-			//		if (poker1.result.type == poker2.result.type) return poker1.result.compareValue.CompareTo(poker2.result.compareValue);
-			//		if (poker1.result.type == HandPokerType.四条炸 || poker1.result.type == HandPokerType.王炸) return 1;
-			//		return -1;
-			//	case HandPokerType.四条炸:
-			//	case HandPokerType.王炸:
-			//		if (poker1.result.type == poker2.result.type) return poker1.result.compareValue.CompareTo(poker2.result.compareValue);
-			//		if (poker1.result.type == HandPokerType.四条炸 || poker1.result.type == HandPokerType.王炸) return 1;
-			//		return -1;
-			//}
-			return null;
+			var uphand = this.Data.chupai.LastOrDefault();
+			if (uphand?.playerIndex == this.Data.playerIndex) uphand = null;
+			return Utils.GetAllTips(this.Data.players[this.Data.playerIndex].poker, uphand);
 		}
 
 		/// <summary>
@@ -434,9 +241,9 @@ namespace BetGame.DDZ
 			if (playerIndex != this.Data.playerIndex) throw new ArgumentException($"还没有轮到 {playerId} 出牌");
 			if (poker == null || poker.Length == 0) throw new ArgumentException("poker 不能为空");
 			foreach (var pk in poker) if (this.Data.players[this.Data.playerIndex].poker.Contains(pk) == false) throw new ArgumentException($"{playerId} 手上没有这手牌");
-			var hand = new HandPokerInfo { time = DateTime.Now, playerIndex = this.Data.playerIndex, result = this.ComplierHandPoker(poker) };
+			var hand = new HandPokerInfo { time = DateTime.Now, playerIndex = this.Data.playerIndex, result = Utils.ComplierHandPoker(poker) };
 			if (hand.result == null) throw new ArgumentException("poker 不是有效的一手牌");
-			if (this.Data.chupai.Any() && this.Data.chupai.Last().playerIndex != this.Data.playerIndex && this.CompareHandPoker(hand, this.Data.chupai.Last()) <= 0) throw new ArgumentException("poker 打不过上一手牌");
+			if (this.Data.chupai.Any() && this.Data.chupai.Last().playerIndex != this.Data.playerIndex && Utils.CompareHandPoker(hand, this.Data.chupai.Last()) <= 0) throw new ArgumentException("poker 打不过上一手牌");
 			this.Data.chupai.Add(hand);
 			foreach (var pk in poker) this.Data.players[this.Data.playerIndex].poker.Remove(pk);
 

@@ -52,6 +52,12 @@ namespace BetGame.DDZ.WebHost.Controllers
 			return APIReturn.成功.SetData("id", ddz.Id, "data", ddz.Data);
 		}
 
+		[HttpPost("PlayTips")]
+		public APIReturn 出牌提示([FromForm] string id, [FromForm] string playerId) {
+			var ddz = DDZGet(id);
+			var tips = ddz.PlayTips(playerId);
+			return APIReturn.成功.SetData("id", ddz.Id, "data", ddz.Data, "tips", tips);
+		}
 		[HttpPost("Play")]
 		public APIReturn 出牌([FromForm] string id, [FromForm] string playerId, [FromForm] int[] poker) {
 			var ddz = DDZGet(id);

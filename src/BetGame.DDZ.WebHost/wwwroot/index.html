@@ -84,6 +84,7 @@
 
 						<span v-if="stage == '斗地主' && playerIndex == ddzdata.playerIndex">
 							<Button @click="Play(player.id)" type="primary">出牌</Button>
+							<Button @click="PlayTips(player.id)" type="primary">提示</Button>
 							<Button v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(player.id)" type="primary">不要</Button>
 						</span>
 					</p>
@@ -122,6 +123,8 @@
 					playerIds: ['玩家1', '玩家2', '玩家3'],
 					stage: '未开始',
 					selectedPokers: {}, //出牌
+					playTips: [],//提示出牌
+					playTipsIndex: 0, 
 					updateindex: 0,
 
 					ddzid: '',
@@ -211,6 +214,8 @@
 							this.ddzdata = rt.data.data;
 							this.stage = this.ddzdata.stage;
 							this.selectedPokers = {};
+							this.playTips.splice(0, this.playTips.length);
+							this.playTipsIndex = 0;
 						});
 					},
 					Pass(playerId) {
@@ -219,8 +224,40 @@
 							this.ddzdata = rt.data.data;
 							this.stage = this.ddzdata.stage;
 							this.selectedPokers = {};
+							this.playTips.splice(0, this.playTips.length);
+							this.playTipsIndex = 0;
 						});
 					},
+					PlayTips(playerId) {
+						if (this.playTips.length == 0) {
+							ajax('form', '/ddz/PlayTips', { id: this.ddzid, playerId: playerId }).then(rt => {
+								if (!rt.success) return alert(rt.message);
+								this.ddzdata = rt.data.data;
+								this.stage = this.ddzdata.stage;
+								this.selectedPokers = {};
+								this.playTips.splice(0, this.playTips.length);
+								this.playTipsIndex = 0;
+								for (var a = 0; a < rt.data.tips.length; a++) this.playTips.push(rt.data.tips[a]);
+								if (this.playTips.length == 0) {
+									this.Pass(playerId);
+								} else {
+									this.NextPlayTips();
+								}
+							});
+						} else {
+							this.NextPlayTips();
+						}
+					},
+					NextPlayTips() {
+						if (this.playTipsIndex >= this.playTips.length) return;
+						this.selectedPokers = {};
+						this.updateindex++;
+						var tips = this.playTips[this.playTipsIndex];
+						for (var a = 0; a < tips.length; a++) this.selectedPokers[tips[a]] = 1;
+						this.updateindex++;
+						this.playTipsIndex++;
+						if (this.playTipsIndex >= this.playTips.length) this.playTipsIndex = 0;
+					}
 				},
 
 				created() {
