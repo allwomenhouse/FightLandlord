@@ -62,7 +62,7 @@
 						@click="clickPoker(player.poker[pkIndex])"
 						class="poker"
 						:style="{ cursor: 'pointer', 
-						left: (pkIndex + 1) * 25 + 'px',
+						left: (pkIndex + 1) * 32 + 'px',
 						top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '-32px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
 					  >{{pk}}</span>
 				</div>
@@ -116,8 +116,8 @@
 
 	<style>
 		.poker {
-			background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHsAAAC4CAIAAABM2QQyAAACR0lEQVR4Ae3SwQkAMAwDsbb775zQJfQ6L3AgfGfmNCjwYKvUF0hc/yDxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vVxLb4UewRt/SqtvQAAAABJRU5ErkJggg==");
-			background-position: 3px 32px;
+			background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAACgCAIAAABvxb4vAAAB4klEQVR4Ae3SsQ0AIBADMWD/nR8xAlc7/TVW9sws+xc4/4niCYCLPwAHLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHRbgLwDMEPa4t7ggAAAAASUVORK5CYII=");
+			background-position: 6px 53px;
 			background-repeat: no-repeat;
 			position: absolute;
 			margin: 0px;
