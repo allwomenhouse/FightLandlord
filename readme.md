@@ -12,6 +12,12 @@
 
 ![](003.png)
 
+# 环境依赖
+
+* .NETCore 2.1
+* chrome
+* redis-server(本地环境)
+
 # 已实现功能
 
 * 洗牌
