@@ -347,13 +347,13 @@ namespace BetGame.DDZ {
 			if (uphand.result.type == HandPokerType.个) {
 				var gb1 = gb.Where(a => a.count == 1 && a.key > uphand.result.compareValue && (jokers.Length == 2 && a.key != 16 && a.key != 17 || jokers.Length < 2)).OrderBy(a => a.key); //忽略双王
 				if (gb1.Any()) ret.AddRange(gb1.Select(a => a.poker.ToArray()));
-				if (ret.Any() == false) {
+				if (gb1.Any() == false) {
 					var gb2 = gb.Where(a => a.count == 2 && a.key > uphand.result.compareValue).OrderBy(a => a.key);
 					if (gb2.Any()) {
 						foreach (var g2 in gb2) ret.AddRange(g2.poker.OrderBy(a => a).Select(a => new[] { a }));
 					}
 				}
-				if (ret.Any() == false) {
+				if (gb1.Any() == false) {
 					var gb3 = gb.Where(a => a.count == 3 && a.key > uphand.result.compareValue).OrderBy(a => a.key);
 					if (gb3.Any()) {
 						foreach (var g3 in gb3) ret.AddRange(g3.poker.OrderBy(a => a).Select(a => new[] { a }));

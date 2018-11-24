@@ -56,12 +56,14 @@
 		</div>
 
 		<div v-if="stage == '叫地主' || stage == '斗地主'" v-for="(player, playerIndex) in ddzdata.players">
-			<div style="padding: 20px 20px 0px 20px; height:200px; border:1px solid #ddd;">
+			<div style="padding: 20px 20px 0px 20px; height:260px; border:1px solid #ddd;">
 				<div style="float:left; width:70%; position: relative;">
-					<span v-for="(pk, pkIndex) in player.pokerText"
+					<span v-for="(pk, pkIndex, pkleft) in player.pokerText"
 						@click="clickPoker(player.poker[pkIndex])"
 						class="poker"
-						:style="{ cursor: 'pointer', left: ((pkIndex + 1) * 33) + 'px', top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '-32px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? 'black' : 'red'),}"
+						:style="{ cursor: 'pointer', 
+						left: (pkIndex + 1) * 25 + 'px',
+						top: updateindex> 0 && selectedPokers[player.poker[pkIndex]] ? '-32px' : '', color: (player.poker[pkIndex] < 53 && (player.poker[pkIndex] % 4 == 1 || player.poker[pkIndex] % 4 == 3) || player.poker[pkIndex] == 52 ? '#483f3f' : 'rgb(119, 11, 11)'),}"
 					  >{{pk}}</span>
 				</div>
 				<div style="float:right;">
@@ -90,12 +92,12 @@
 					<p slot="title">底牌</p>
 					<p>
 						<span v-for="(pk, pkIndex) in ddzdata.dipaiText"
-						:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.dipai[pkIndex] < 53 && (ddzdata.dipai[pkIndex] % 4 == 1 || ddzdata.dipai[pkIndex] % 4 == 3) || ddzdata.dipai[pkIndex] == 52 ? 'black' : 'red'),}"
+						:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.dipai[pkIndex] < 53 && (ddzdata.dipai[pkIndex] % 4 == 1 || ddzdata.dipai[pkIndex] % 4 == 3) || ddzdata.dipai[pkIndex] == 52 ? '#483f3f' : 'rgb(119, 11, 11)'),}"
 						>{{pk}}</span>
 	
 						<span v-if="ddzdata.chupai.length > 0" style="margin-left:120px;">
 							<span v-for="(pk, pkIndex) in ddzdata.chupai[ddzdata.chupai.length - 1].result.text"
-							:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? 'black' : 'red'),}"
+							:style="{ fontSize: '120px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? '#483f3f' : 'rgb(119, 11, 11)'),}"
 							>{{pk}}</span>
 						</span>
 	
@@ -114,13 +116,13 @@
 
 	<style>
 		.poker {
-			background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAABwCAIAAADZkRrTAAABJ0lEQVR4Ae3SsRHAMAzDwDj776ycJ0CL6OCWDcX3mZln9XtXX3eP68L/E2eYoX+BfqnfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn2foN6KGGdJC/jxDvxE1zJAW8ucZ+o2oYYa0kD/P0G9EDTOkhfx5hn4japghLeTPM/QbUcMMaSF/nqHfiBpmSAv58wz9RtQwQ1rIn+83/AAqIwPd7cMfYwAAAABJRU5ErkJggg==");
+			background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHsAAAC4CAIAAABM2QQyAAACR0lEQVR4Ae3SwQkAMAwDsbb775zQJfQ6L3AgfGfmNCjwYKvUF0hc/yDxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vXxxLWA7vVxLb4UewRt/SqtvQAAAABJRU5ErkJggg==");
 			background-position: 3px 32px;
 			background-repeat: no-repeat;
 			position: absolute;
 			margin: 0px;
-			font-size: 120px;
-			height: 160px;
+			font-size: 180px;
+			height: 220px;
 		}
 		button {
 			padding: 9px;
