@@ -20,7 +20,21 @@
 
 		<div v-if="stage == '未开始'" style="background:#eee;">
 			<Card :bordered="false">
-				<p slot="title">准备开始游戏(.NETCore + HTML5)</p>
+				<p slot="title">.NETCore斗地主服务端 + HTML5前端</p>
+				<div>
+					<p>本项目最终目标为AI斗地主，机器人最优方案对打。</p>
+					
+					<p>声明：本项目谥在学习，任何用于违法用途的行为与作者无关。</p>
+					
+					<p>如果对本项目感兴趣，欢迎加入QQ讨论群：8578575</p>
+					
+					<p>目前尚处于研阶段，为了方便测试，HTML5做成了单机方式运行，但这并不影响后期部署成多端游戏。</p>
+
+					<p>github: <a href="https://github.com/2881099/FightLandlord" target="_blank">https://github.com/2881099/FightLandlord</a></p>
+
+					<p>&nbsp;</p>
+					<p>&nbsp;</p>
+				</div>
 				<p><Input v-model="playerIds[0]" placeholder="Enter something..." style="width:300px" /></p>
 				<p><Input v-model="playerIds[1]" placeholder="Enter something..." style="width:300px" /></p>
 				<p><Input v-model="playerIds[2]" placeholder="Enter something..." style="width:300px" /></p>
