@@ -22,7 +22,10 @@ namespace BetGame.DDZ {
 
 		[Fact]
 		public void ComplierHandPoker() {
-			
+			var pokers = new[] { 5, 6, 8, 9, 13, 15, 16, 18 };
+			var ch = Utils.ComplierHandPoker(Utils.GroupByPoker(pokers));
+			Assert.Equal(HandPokerType.Á¬¶Ô, ch.type);
+			Assert.Equal(8, ch.value.Length);
 		}
 
 		[Fact]
@@ -32,7 +35,9 @@ namespace BetGame.DDZ {
 
 		[Fact]
 		public void GetAllTips() {
-
+			//456788999 JJJ QQQQ KKK AA
+			var pokers = new[] { 4, 8, 12, 16, 20, 21, 24, 25, 26, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 44, 45 };
+			//Assert.Equal(Utils.GetAllTips(pokers, Utils.ComplierHandPoker(Utils.GroupByPoker()));
 		}
 	}
 }

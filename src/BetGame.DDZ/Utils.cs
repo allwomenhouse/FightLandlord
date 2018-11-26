@@ -23,6 +23,7 @@ namespace BetGame.DDZ {
 		/// <returns></returns>
 		public static bool IsSeries(IEnumerable<int> poker) {
 			if (poker == null || poker.Any() == false) return false;
+			poker = poker.OrderBy(a => a);
 			if (poker.Last() >= 15) return false;
 			int pp = 255;
 			foreach (var p in poker) {
