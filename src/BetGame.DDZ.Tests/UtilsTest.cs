@@ -22,7 +22,8 @@ namespace BetGame.DDZ {
 
 		[Fact]
 		public void ComplierHandPoker() {
-			var pokers = new[] { 5, 6, 8, 9, 13, 15, 16, 18 };
+			//44556677
+			var pokers = new[] { 5, 6, 8, 9, 16, 18, 13, 15 };
 			var ch = Utils.ComplierHandPoker(Utils.GroupByPoker(pokers));
 			Assert.Equal(HandPokerType.Á¬¶Ô, ch.type);
 			Assert.Equal(8, ch.value.Length);

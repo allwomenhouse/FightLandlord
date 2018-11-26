@@ -16,7 +16,7 @@ namespace BetGame.DDZ {
 		public HandPokerComplieResult result { get; set; }
 	}
 
-	public enum HandPokerType { 个, 对, 三条, 三条带一个, 三条带一对, 顺子, 连对, 飞机, 飞机带个, 飞机带队, 炸带二个, 炸带二对, 四条炸, 王炸 }
+	public enum HandPokerType { 个, 对, 三条, 三条带一个, 三条带一对, 顺子, 连对, 飞机, 飞机带N个, 飞机带N对, 炸带二个, 炸带二对, 四条炸, 王炸 }
 
 	public class HandPokerComplieResult {
 		public HandPokerType type { get; set; }
