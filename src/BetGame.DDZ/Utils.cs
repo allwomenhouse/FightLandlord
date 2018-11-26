@@ -334,9 +334,13 @@ namespace BetGame.DDZ {
 			var ret = new List<int[]>();
 
 			if (uphand == null) {
-				//出手上最小的牌
-				var hand = Utils.ComplierHandPoker(pokers); //尝试一手出完
-				if (hand != null) return new List<int[]>(new[] { hand.value });
+				var gb4 = gb.Where(a => a.count == 4).OrderBy(a => a.key);
+				if (jokers.Length == 2 && gb.Count() == 2 || //手上只有王炸
+					gb4.Count() == 1 && gb.Count() == 1 //手上只有4张炸
+					) {
+					var hand = Utils.ComplierHandPoker(pokers); //尝试一手出完
+					if (hand != null) return new List<int[]>(new[] { hand.value });
+				}
 
 				var gb1 = gb.Where(a => a.count == 1 && (jokers.Length == 2 && a.key != 16 && a.key != 17 || jokers.Length < 2)).OrderBy(a => a.key).FirstOrDefault(); //忽略双王
 				var gb2 = gb.Where(a => a.count == 2).OrderBy(a => a.key).FirstOrDefault();
@@ -373,7 +377,7 @@ namespace BetGame.DDZ {
 				if (gb2.Any()) ret.AddRange(gb2.Select(a => a.poker.OrderByDescending(b => b).ToArray()));
 				if (ret.Any() == false) {
 					var gb3 = gb.Where(a => a.count == 3 && a.key > uphand.result.compareValue).OrderBy(a => a.key);
-					if (gb3.Any()) ret.AddRange(gb3.Select(a => a.poker.Where((b, c) => c < 3).OrderByDescending(b => b).ToArray()));
+					if (gb3.Any()) ret.AddRange(gb3.Select(a => a.poker.Where((b, c) => c < 2).OrderByDescending(b => b).ToArray()));
 				}
 				if (ret.Any() == false) {
 					var gb4 = gb.Where(a => a.count == 4).OrderByDescending(a => a.key);
@@ -425,7 +429,7 @@ namespace BetGame.DDZ {
 						if (gb2.Any()) ret.AddRange(gb2.Select(a => g3.poker.OrderByDescending(b => b).Concat(a.poker.OrderByDescending(b => b)).ToArray()));
 						if (ret.Any() == false) {
 							var gb33 = gb.Where(a => a.count == 3 && a.key != g3.key).OrderBy(a => a.key);
-							if (gb33.Any()) ret.AddRange(gb33.Select(a => g3.poker.OrderByDescending(b => b).Concat(a.poker.Where((b, c) => c < 3).OrderByDescending(b => b)).ToArray()));
+							if (gb33.Any()) ret.AddRange(gb33.Select(a => g3.poker.OrderByDescending(b => b).Concat(a.poker.Where((b, c) => c < 2).OrderByDescending(b => b)).ToArray()));
 						}
 					}
 				}
@@ -454,7 +458,7 @@ namespace BetGame.DDZ {
 						var ses = gbs.Slice(a, uphand.result.value.Length / 2).ToArray();
 						if (Utils.IsSeries(ses.Select(b => b.key))) {
 							var tmp2 = new List<int>();
-							foreach (var se in ses) tmp2.AddRange(se.poker.Where((b, c) => c < 3).OrderByDescending(b => b));
+							foreach (var se in ses) tmp2.AddRange(se.poker.Where((b, c) => c < 2).OrderByDescending(b => b));
 							ret.Add(tmp2.ToArray());
 						}
 					}
@@ -471,7 +475,7 @@ namespace BetGame.DDZ {
 						var ses = gbs.Slice(a, uphand.result.value.Length / 3).ToArray();
 						if (Utils.IsSeries(ses.Select(b => b.key))) {
 							var tmp3 = new List<int>();
-							foreach (var se in ses) tmp3.AddRange(se.poker.Where((b, c) => c < 4).OrderByDescending(b => b));
+							foreach (var se in ses) tmp3.AddRange(se.poker.Where((b, c) => c < 3).OrderByDescending(b => b));
 							ret.Add(tmp3.ToArray());
 						}
 					}
@@ -488,7 +492,7 @@ namespace BetGame.DDZ {
 						var ses = gbs.Slice(a, uphand.result.value.Length / 4).ToArray();
 						if (Utils.IsSeries(ses.Select(b => b.key))) {
 							var tmp3 = new List<int>();
-							foreach (var se in ses) tmp3.AddRange(se.poker.Where((b, c) => c < 4).OrderByDescending(b => b));
+							foreach (var se in ses) tmp3.AddRange(se.poker.Where((b, c) => c < 3).OrderByDescending(b => b));
 
 							var gb11 = gb.Where(z => z.count == 1 && (jokers.Length == 2 && z.key != 16 && z.key != 17 || jokers.Length < 2)).OrderBy(z => z.key); //忽略双王
 							if (gb11.Any()) ret.AddRange(gb11.Select(z => tmp3.Concat(z.poker).ToArray()));
@@ -519,14 +523,14 @@ namespace BetGame.DDZ {
 						var ses = gbs.Slice(a, uphand.result.value.Length / 5).ToArray();
 						if (Utils.IsSeries(ses.Select(b => b.key))) {
 							var tmp3 = new List<int>();
-							foreach (var se in ses) tmp3.AddRange(se.poker.Where((b, c) => c < 4).OrderByDescending(b => b));
+							foreach (var se in ses) tmp3.AddRange(se.poker.Where((b, c) => c < 3).OrderByDescending(b => b));
 
 
 							var gb22 = gb.Where(z => z.count == 2).OrderBy(z => z.key);
 							if (gb22.Any()) ret.AddRange(gb22.Select(z => tmp3.Concat(z.poker.OrderByDescending(b => b)).ToArray()));
 							if (ret.Any() == false) {
 								var gb33 = gb.Where(z => z.count == 3 && ses.Where(y => y.key == z.key).Any() == false).OrderBy(z => z.key);
-								if (gb33.Any()) ret.AddRange(gb33.Select(z => tmp3.Concat(z.poker.Where((b, c) => c < 3).OrderByDescending(b => b)).ToArray()));
+								if (gb33.Any()) ret.AddRange(gb33.Select(z => tmp3.Concat(z.poker.Where((b, c) => c < 2).OrderByDescending(b => b)).ToArray()));
 							}
 						}
 					}
