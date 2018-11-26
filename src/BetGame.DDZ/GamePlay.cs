@@ -241,7 +241,7 @@ namespace BetGame.DDZ
 			if (playerIndex != this.Data.playerIndex) throw new ArgumentException($"还没有轮到 {playerId} 出牌");
 			if (poker == null || poker.Length == 0) throw new ArgumentException("poker 不能为空");
 			foreach (var pk in poker) if (this.Data.players[this.Data.playerIndex].poker.Contains(pk) == false) throw new ArgumentException($"{playerId} 手上没有这手牌");
-			var hand = new HandPokerInfo { time = DateTime.Now, playerIndex = this.Data.playerIndex, result = Utils.ComplierHandPoker(poker) };
+			var hand = new HandPokerInfo { time = DateTime.Now, playerIndex = this.Data.playerIndex, result = Utils.ComplierHandPoker(Utils.GroupByPoker(poker)) };
 			if (hand.result == null) throw new ArgumentException("poker 不是有效的一手牌");
 			if (this.Data.chupai.Any() && this.Data.chupai.Last().playerIndex != this.Data.playerIndex && Utils.CompareHandPoker(hand, this.Data.chupai.Last()) <= 0) throw new ArgumentException("poker 打不过上一手牌");
 			this.Data.chupai.Add(hand);

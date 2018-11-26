@@ -170,32 +170,36 @@ namespace BetGame.DDZ {
 			return dic.Select(a => new GroupByPokerResult { key = a.Key, count = a.Value.count, poker = a.Value.poker }).OrderByDescending(a => a.count);
 		}
 
-		public static HandPokerComplieResult ComplierHandPoker(int[] pokerNoneSort) {
-			if (pokerNoneSort == null || pokerNoneSort.Length == 0) return null;
-			var poker = pokerNoneSort.OrderBy(a => a).ToArray();
-			var gb = Utils.GroupByPoker(poker);
+		/// <summary>
+		/// 编译一出牌
+		/// </summary>
+		/// <param name="gb"></param>
+		/// <returns></returns>
+		public static HandPokerComplieResult ComplierHandPoker(IEnumerable<GroupByPokerResult> gb) {
+			if (gb == null || gb.Any() == false) return null;
+			var pokerLength = gb.Sum(a => a.count);
 
-			if (poker.Length == 1) { //个
+			if (pokerLength == 1) { //个
 				return Utils.GetHandPokerComplieResult(HandPokerType.个, gb);
 			}
-			if (poker.Length == 2) { //对，王炸
+			if (pokerLength == 2) { //对，王炸
 				if (gb.Where(a => a.count == 2).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.对, gb);
 				if (gb.Where(a => a.key == 16 || a.key == 17).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.王炸, gb);
 			}
-			if (poker.Length == 3) { //三条
+			if (pokerLength == 3) { //三条
 				if (gb.Where(a => a.count == 3).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.三条, gb);
 			}
-			if (poker.Length == 4) { //四条炸，三条带一个，炸带二个
+			if (pokerLength == 4) { //四条炸，三条带一个，炸带二个
 				if (gb.Where(a => a.count == 4).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.四条炸, gb);
 				if (gb.Where(a => a.count == 3).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.三条带一个, gb);
 				if (gb.Where(a => a.key == 16 || a.key == 17).Count() == 2) return Utils.GetHandPokerComplieResult(HandPokerType.炸带二个, gb);
 			}
-			if (poker.Length == 5) { //顺子，三条带一对
+			if (pokerLength == 5) { //顺子，三条带一对
 				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
 				if (gb1.Length == 5 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
 				if (gb.Where(a => a.count == 3).Any() && gb.Where(a => a.count == 2).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.三条带一对, gb);
 			}
-			if (poker.Length == 6) { //顺子，连对，飞机，炸带二个
+			if (pokerLength == 6) { //顺子，连对，飞机，炸带二个
 				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
 				if (gb1.Length == 6 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
 
@@ -208,11 +212,11 @@ namespace BetGame.DDZ {
 				if (gb.Where(a => a.count == 4).Any()) return Utils.GetHandPokerComplieResult(HandPokerType.炸带二个, gb);
 				if (gb.Where(a => a.key == 16 || a.key == 17).Count() == 2 && gb.Select(a => a.count == 2).Count() == 2) return Utils.GetHandPokerComplieResult(HandPokerType.炸带二个, gb);
 			}
-			if (poker.Length == 7) { //顺子
+			if (pokerLength == 7) { //顺子
 				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
 				if (gb1.Length == 7 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
 			}
-			if (poker.Length == 8) { //顺子，连对，飞机带个，炸带二对
+			if (pokerLength == 8) { //顺子，连对，飞机带个，炸带二对
 				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
 				if (gb1.Length == 8 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
 
@@ -224,14 +228,14 @@ namespace BetGame.DDZ {
 
 				if (gb.Where(a => a.count == 4).Any() && gb.Where(a => a.count == 2).Count() == 2) return Utils.GetHandPokerComplieResult(HandPokerType.炸带二对, gb);
 			}
-			if (poker.Length == 9) { //顺子，飞机
+			if (pokerLength == 9) { //顺子，飞机
 				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
 				if (gb1.Length == 9 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
 
 				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
 				if (gb3.Length == 3 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
 			}
-			if (poker.Length == 10) { //顺子，连对，飞机带队
+			if (pokerLength == 10) { //顺子，连对，飞机带队
 				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
 				if (gb1.Length == 10 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
 
@@ -241,11 +245,11 @@ namespace BetGame.DDZ {
 				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
 				if (gb3.Length == 2 && Utils.IsSeries(gb3) && gb.Where(a => a.count == 2).Count() == 2) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带队, gb);
 			}
-			if (poker.Length == 11) { //顺子
+			if (pokerLength == 11) { //顺子
 				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
 				if (gb1.Length == 11 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
 			}
-			if (poker.Length == 12) { //顺子，连对，飞机，飞机带个
+			if (pokerLength == 12) { //顺子，连对，飞机，飞机带个
 				var gb1 = gb.Where(a => a.count == 1).Select(a => a.key).ToArray();
 				if (gb1.Length == 12 && Utils.IsSeries(gb1)) return Utils.GetHandPokerComplieResult(HandPokerType.顺子, gb);
 
@@ -256,30 +260,30 @@ namespace BetGame.DDZ {
 				if (gb3.Length == 4 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
 				if (gb3.Length == 3 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带个, gb);
 			}
-			if (poker.Length == 14) { //连对
+			if (pokerLength == 14) { //连对
 				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
 				if (gb2.Length == 7 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
 			}
-			if (poker.Length == 15) { //飞机，飞机带队
+			if (pokerLength == 15) { //飞机，飞机带队
 				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
 				if (gb3.Length == 5 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
 				if (gb3.Length == 3 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带队, gb);
 			}
-			if (poker.Length == 16) { //连对，飞机带个
+			if (pokerLength == 16) { //连对，飞机带个
 				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
 				if (gb2.Length == 8 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
 
 				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
 				if (gb3.Length == 4 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机带个, gb);
 			}
-			if (poker.Length == 18) { //连对，飞机
+			if (pokerLength == 18) { //连对，飞机
 				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
 				if (gb2.Length == 9 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
 
 				var gb3 = gb.Where(a => a.count == 3).Select(a => a.key).ToArray();
 				if (gb3.Length == 6 && Utils.IsSeries(gb3)) return Utils.GetHandPokerComplieResult(HandPokerType.飞机, gb);
 			}
-			if (poker.Length == 20) { //连对，飞机带个，飞机带队
+			if (pokerLength == 20) { //连对，飞机带个，飞机带队
 				var gb2 = gb.Where(a => a.count == 2).Select(a => a.key).ToArray();
 				if (gb2.Length == 10 && Utils.IsSeries(gb2)) return Utils.GetHandPokerComplieResult(HandPokerType.连对, gb);
 
@@ -338,7 +342,7 @@ namespace BetGame.DDZ {
 				if (jokers.Length == 2 && gb.Count() == 2 || //手上只有王炸
 					gb4.Count() == 1 && gb.Count() == 1 //手上只有4张炸
 					) {
-					var hand = Utils.ComplierHandPoker(pokers); //尝试一手出完
+					var hand = Utils.ComplierHandPoker(gb); //尝试一手出完
 					if (hand != null) return new List<int[]>(new[] { hand.value });
 				}
 
