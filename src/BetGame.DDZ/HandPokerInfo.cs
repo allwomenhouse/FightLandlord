@@ -11,6 +11,10 @@ namespace BetGame.DDZ {
 		/// </summary>
 		public int playerIndex { get; set; }
 		/// <summary>
+		/// 不要
+		/// </summary>
+		public bool isPass { get; set; }
+		/// <summary>
 		/// 牌编译结果
 		/// </summary>
 		public HandPokerComplieResult result { get; set; }

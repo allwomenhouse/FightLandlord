@@ -34,15 +34,18 @@ namespace BetGame.DDZ.WebHost
         public void ConfigureServices(IServiceCollection services)
         {
 			services.AddScoped<CustomExceptionFilter>();
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddControllersWithViews();
+            services.AddRazorPages();
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
 			app.UseDeveloperExceptionPage();
 
-			app.UseMvc();
-			app.UseStaticFiles();
+            app.UseRouting();
+            app.UseEndpoints(config => config.MapControllers());
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
         }
     }
 }

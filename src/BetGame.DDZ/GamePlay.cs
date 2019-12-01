@@ -224,7 +224,7 @@ namespace BetGame.DDZ
 			var playerIndex = this.Data.players.FindIndex(a => a.id == playerId);
 			if (playerIndex == -1) throw new ArgumentException($"{playerId} 不在本局游戏");
 			if (playerIndex != this.Data.playerIndex) throw new ArgumentException($"还没有轮到 {playerId} 出牌");
-			var uphand = this.Data.chupai.LastOrDefault();
+			var uphand = this.Data.chupai.Where(a => a.isPass == false).LastOrDefault();
 			if (uphand?.playerIndex == this.Data.playerIndex) uphand = null;
 			return Utils.GetAllTips(this.Data.players[this.Data.playerIndex].poker, uphand);
 		}
@@ -241,9 +241,10 @@ namespace BetGame.DDZ
 			if (playerIndex != this.Data.playerIndex) throw new ArgumentException($"还没有轮到 {playerId} 出牌");
 			if (poker == null || poker.Length == 0) throw new ArgumentException("poker 不能为空");
 			foreach (var pk in poker) if (this.Data.players[this.Data.playerIndex].poker.Contains(pk) == false) throw new ArgumentException($"{playerId} 手上没有这手牌");
-			var hand = new HandPokerInfo { time = DateTime.Now, playerIndex = this.Data.playerIndex, result = Utils.ComplierHandPoker(Utils.GroupByPoker(poker)) };
+			var hand = new HandPokerInfo { time = DateTime.Now, playerIndex = this.Data.playerIndex, isPass = false, result = Utils.ComplierHandPoker(Utils.GroupByPoker(poker)) };
 			if (hand.result == null) throw new ArgumentException("poker 不是有效的一手牌");
-			if (this.Data.chupai.Any() && this.Data.chupai.Last().playerIndex != this.Data.playerIndex && Utils.CompareHandPoker(hand, this.Data.chupai.Last()) <= 0) throw new ArgumentException("poker 打不过上一手牌");
+			var uphand = this.Data.chupai.Where(a => a.isPass == false).LastOrDefault();
+			if (uphand != null && uphand.playerIndex != this.Data.playerIndex && Utils.CompareHandPoker(hand, uphand) <= 0) throw new ArgumentException("poker 打不过上一手牌");
 			this.Data.chupai.Add(hand);
 			foreach (var pk in poker) this.Data.players[this.Data.playerIndex].poker.Remove(pk);
 
@@ -273,9 +274,11 @@ namespace BetGame.DDZ
 			var playerIndex = this.Data.players.FindIndex(a => a.id == playerId);
 			if (playerIndex == -1) throw new ArgumentException($"{playerId} 不在本局游戏");
 			if (playerIndex != this.Data.playerIndex) throw new ArgumentException($"还没有轮到 {playerId} 出牌");
-			if (this.Data.chupai.Any() == false) throw new ArgumentException("第一手牌不能 Pass");
-			if (this.Data.chupai.Last().playerIndex == this.Data.playerIndex) throw new ArgumentException("此时应该出牌，不能 Pass");
+			var uphand = this.Data.chupai.Where(a => a.isPass == false).LastOrDefault();
+			if (uphand == null) throw new ArgumentException("第一手牌不能 Pass");
+			if (uphand.playerIndex == this.Data.playerIndex) throw new ArgumentException("此时应该出牌，不能 Pass");
 			if (++this.Data.playerIndex >= this.Data.players.Count) this.Data.playerIndex = 0;
+			this.Data.chupai.Add(new HandPokerInfo { time = DateTime.Now, playerIndex = this.Data.playerIndex, isPass = true, result = null });
 			this.EventSave();
 			WriteLog($"{this.Data.players[playerIndex].id} 不要，轮到 {this.Data.players[this.Data.playerIndex].id} 出牌");
 			this.OnNextPlay?.Invoke(this.Id, this.Data);

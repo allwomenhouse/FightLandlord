@@ -1,16 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>netcoreapp2.1</TargetFramework>
+		<TargetFramework>netcoreapp3.0</TargetFramework>
 		<WarningLevel>3</WarningLevel>
 		<ServerGarbageCollection>false</ServerGarbageCollection>
 		<MvcRazorCompileOnPublish>false</MvcRazorCompileOnPublish>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
-
+  
 	<ItemGroup>
 		<ProjectReference Include="..\BetGame.DDZ\BetGame.DDZ.csproj" />
 	</ItemGroup>

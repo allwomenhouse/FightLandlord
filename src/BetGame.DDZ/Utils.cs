@@ -19,7 +19,7 @@ namespace BetGame.DDZ {
 		/// <summary>
 		/// 判断是否连续
 		/// </summary>
-		/// <param name="ps">使用前请先排序</param>
+		/// <param name="poker">使用前请先排序</param>
 		/// <returns></returns>
 		public static bool IsSeries(IEnumerable<int> poker) {
 			if (poker == null || poker.Any() == false) return false;
@@ -295,6 +295,8 @@ namespace BetGame.DDZ {
 			return null;
 		}
 		public static int CompareHandPoker(HandPokerInfo poker1, HandPokerInfo poker2) {
+			if (poker1 == null) return -1;
+			if (poker2 == null) return 1;
 			switch (poker2.result.type) {
 				case HandPokerType.个:
 				case HandPokerType.对:
@@ -619,9 +621,9 @@ namespace BetGame.DDZ {
 		}
 
 		public class GroupByPokerResult {
-			internal int key { get; set; }
-			internal int count { get; set; }
-			internal IEnumerable<int> poker { get; set; }
+			public int key { get; set; }
+			public int count { get; set; }
+			public IEnumerable<int> poker { get; set; }
 		}
 		class GroupByPokerTmpResult {
 			internal int count { get; set; } = 0;
