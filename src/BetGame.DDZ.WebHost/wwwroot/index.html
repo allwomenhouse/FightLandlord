@@ -104,7 +104,7 @@
 						:style="{ fontFamily: 'PokerFace', fontSize: '80px', cursor: 'pointer', color: (ddzdata.dipai[pkIndex] < 53 && (ddzdata.dipai[pkIndex] % 4 == 1 || ddzdata.dipai[pkIndex] % 4 == 3) || ddzdata.dipai[pkIndex] == 52 ? 'black' : 'red'),}"
 						><!--{{pk}}-->{{'CpPcDqQdErReFsSfGtTgHuUhIvViJwWjKxXkLyYlMzZmAnNaBoOb??'[ddzdata.dipai[pkIndex]]}}</span>
 	
-						<span v-if="ddzdata.chupai.length > 0" style="margin-left:120px;">
+						<span v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].result != null" style="margin-left:120px;">
 							<span v-for="(pk, pkIndex) in ddzdata.chupai[ddzdata.chupai.length - 1].result.text"
 							:style="{ fontFamily: 'PokerFace', fontSize: '60px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? 'black' : 'red'),}"
 							><!--{{pk}}-->{{'CpPcDqQdErReFsSfGtTgHuUhIvViJwWjKxXkLyYlMzZmAnNaBoOb??'[ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex]]}}</span>
