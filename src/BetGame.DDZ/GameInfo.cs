@@ -40,6 +40,46 @@ namespace BetGame.DDZ {
 		/// 当前游戏阶段
 		/// </summary>
 		public GameStage stage { get; set; }
+
+        public GameInfo CloneToPlayer(string playerId)
+        {
+            var game = new GameInfo
+            {
+                multiple = multiple,
+                multipleAddition = multipleAddition,
+                multipleAdditionMax = multipleAdditionMax,
+                bong = bong,
+                playerIndex = playerIndex,
+                chupai = chupai,
+                stage = stage
+            };
+            game.players = new List<GamePlayer>();
+            for (var a = 0; a < players.Count; a++)
+            {
+                var gp = new GamePlayer
+                {
+                    id = players[a].id,
+                    role = players[a].role,
+                    poker = players[a].poker,
+                    pokerInit = players[a].pokerInit
+                };
+                game.players.Add(gp);
+                if (players[a].id != playerId)
+                {
+                    gp.poker = gp.poker.Select(x => 54).ToList();
+                    gp.pokerInit = gp.pokerInit.Select(x => 54).ToList();
+                }
+            }
+            game.dipai = dipai;
+            switch (stage)
+            {
+                case GameStage.未开始:
+                case GameStage.叫地主:
+                    game.dipai = game.dipai.Select(a => 54).ToArray();
+                    break;
+            }
+            return game;
+        }
 	}
 
 	public enum GameStage { 未开始, 叫地主, 斗地主, 游戏结束 }

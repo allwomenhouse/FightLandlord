@@ -1,0 +1,518 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>HTML + .NETCore 斗地主</title>
+
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+
+<body>
+
+    <div id="app" class="p-5">
+
+        <div v-if="wsConnectState == 1010">
+            正在与 WebSocket 服务器连线。。。
+        </div>
+
+        <div v-if="stage == '创建玩家'">
+            <h3>.NETCore斗地主服务端 + HTML5前端</h3>
+            <div>
+                <p>本项目最终目标为AI斗地主，机器人最优方案对打。</p>
+
+                <p>声明：本项目谥在学习，任何用于违法用途的行为与作者无关。</p>
+
+                <p>如果对本项目感兴趣，欢迎加入QQ讨论群：8578575</p>
+
+                <p>目前尚处于研阶段，目前使用 ImCore 实现多用户实时游戏。</p>
+
+                <p>github: <a href="https://github.com/2881099/FightLandlord" target="_blank">https://github.com/2881099/FightLandlord</a></p>
+
+                <p>&nbsp;</p>
+            </div>
+            <p>
+                <Input v-model="editNick" placeholder="Enter something..." style="width:300px" />
+                <input v-if="!GetOrAddPlayering" type="button" @click="GetOrAddPlayer" value="创建玩家!" />
+                <input v-else type="button" value="Loading..." />
+            </p>
+            <p>&nbsp;</p>
+            <div class="poker text-break" style="font-family:PokerFace;font-size:80px;width:80%;">CpPcDqQdErReFsSfGtTgHuUhIvViJwWjKxXkLyYlMzZmAnNaBoOb??</div>
+        </div>
+        <div v-if="player">
+            欢迎您，{{player.Nick}}，积分：{{player.Score}}
+        </div>
+
+        <div v-if="stage == '选择桌位'" class="row">
+            <div v-for="desk in desks" class="col-3 border-info m-3">
+                {{desk.Title}}：
+                <input v-if="desk.player1" type="button" :value="desk.player1.Nick + '(积分：' + desk.player1.Score + ')'" :style="{backgroundColor:playerId == desk.player1.Id ? 'sandybrown' : 'lightskyblue'}" @click="if (playerId == desk.player1.Id) Standup()" />
+                <input v-else type="button" :value="'坐下'" @click="Sitdown(desk.Id, 1)" />
+
+                <input v-if="desk.player2" type="button" :value="desk.player2.Nick + '(积分：' + desk.player2.Score + ')'" :style="{backgroundColor:playerId == desk.player2.Id ? 'sandybrown' : 'lightskyblue'}" @click="if (playerId == desk.player2.Id) Standup()" />
+                <input v-else type="button" :value="'坐下'" @click="Sitdown(desk.Id, 2)" />
+
+                <input v-if="desk.player3" type="button" :value="desk.player3.Nick + '(积分：' + desk.player3.Score + ')'" :style="{backgroundColor:playerId == desk.player3.Id ? 'sandybrown' : 'lightskyblue'}" @click="if (playerId == desk.player3.Id) Standup()" />
+                <input v-else type="button" :value="'坐下'" @click="Sitdown(desk.Id, 3)" />
+
+            </div>
+
+            <div class="col-12">每桌三人，坐满自动开局</div>
+        </div>
+
+        <!--游戏环节开始-->
+        <div v-if="stage == '叫地主' || stage == '斗地主'" v-for="(gp, gpidx) in ddzdata.players">
+            <div style="padding: 20px 20px 0px 20px; height:260px; border:1px solid #ddd;">
+                <div style="float:left; width:70%; margin-top:60px; position: absolute;">
+                    <div v-for="(pk, pkIndex) in gp.pokerText"
+                         @mousedown="if (gp.id == player.Nick) mousedownPoker(gp, pkIndex, gp.poker[pkIndex])"
+                         @mousemove="if (gp.id == player.Nick) mousemovePoker(gp, pkIndex, gp.poker[pkIndex])"
+                         @mouseup="if (gp.id == player.Nick) mouseupPoker(gp, pkIndex, gp.poker[pkIndex])"
+                         class="poker" unselectable="on"
+                         :style="{
+                         overflow: 'hidden' ,
+                         cursor: gp.id==player.Nick ? 'pointer' : null ,
+                         left: (pkIndex + 1) * 32 + 'px' ,
+                         top: updateindex>0 && selectedPokers[gp.poker[pkIndex]] ? '-32px' : '', color: (gp.poker[pkIndex] < 53 && (gp.poker[pkIndex] % 4 == 1 || gp.poker[pkIndex] % 4 == 3) || gp.poker[pkIndex] == 52 ? 'black' : 'red'),}"
+                        >
+                        <div style="width: 110px;height: 156px; overflow: hidden;">
+                            <span class="glyphicon" :name="'CpPcDqQdErReFsSfGtTgHuUhIvViJwWjKxXkLyYlMzZmAnNaBoOb???'[gp.poker[pkIndex]]"></span>
+                        </div>
+                    </div>
+                    <div style="clear:both;"></div>
+                </div>
+                <div style="float:right;">
+                    <div style="text-align: right;">{{gp.id}} <span :style="{ color: gp.role == '地主' ? 'red' : gp.role == '农民' ? 'green' : '#aaa'}">【{{gp.role}}】</span></div>
+
+                    <div v-if="stage == '叫地主' && gpidx == ddzdata.playerIndex" style="margin-top:36px;">
+                        <div v-if="gp.id == player.Nick">
+                            <Button v-for="maddtion in ddzdata.multipleAdditionMax"
+                                    v-if="maddtion > ddzdata.multipleAddition" @click="SelectLandlord(gp.id, maddtion)" type="primary">
+                                {{maddtion}}分
+                            </Button>
+                            <Button @click="SelectFarmer(gp.id)" type="primary">不叫</Button>
+                        </div>
+                        <div v-else>等待操作</div>
+                    </div>
+                    <div v-if="stage == '斗地主' && gpidx == ddzdata.playerIndex" style="margin-top:36px;">
+                        <div v-if="gp.id == player.Nick">
+                            <Button v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(gp.id)" type="primary">不要</Button>
+                            <Button @click="Play(gp.id)" type="primary">出牌</Button>
+                            <Button @click="PlayTips(gp.id)" type="primary">提示</Button>
+                        </div>
+                        <div v-else>等待操作</div>
+                    </div>
+                </div>
+                <div style="clear:both;"></div>
+            </div>
+        </div>
+        <div v-if="stage == '斗地主' || stage == '游戏结束'" style="background:#eee;padding: 20px 20px 0px 20px;">
+            <h3>底牌</h3>
+            <div>
+                <span v-for="(pk, pkIndex) in ddzdata.dipaiText"
+                        :style="{ fontFamily: 'PokerFace', fontSize: '80px', cursor: 'pointer', color: (ddzdata.dipai[pkIndex] < 53 && (ddzdata.dipai[pkIndex] % 4 == 1 || ddzdata.dipai[pkIndex] % 4 == 3) || ddzdata.dipai[pkIndex] == 52 ? 'black' : 'red'),}"><!--{{pk}}-->{{'CpPcDqQdErReFsSfGtTgHuUhIvViJwWjKxXkLyYlMzZmAnNaBoOb???'[ddzdata.dipai[pkIndex]]}}</span>
+
+                <span v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].result != null" style="margin-left:120px;">
+                    <span v-for="(pk, pkIndex) in ddzdata.chupai[ddzdata.chupai.length - 1].result.text"
+                            :style="{ fontFamily: 'PokerFace', fontSize: '60px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? 'black' : 'red'),}"><!--{{pk}}-->{{'CpPcDqQdErReFsSfGtTgHuUhIvViJwWjKxXkLyYlMzZmAnNaBoOb???'[ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex]]}}</span>
+                </span>
+
+                <span v-if="stage == '游戏结束' && ddzdata.chupai.length > 0" style="margin-left:120px;">
+                    游戏结束, 【{{ddzdata.players[ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex].role}}】 胜利,
+
+                    炸弹: {{ddzdata.bong}}, 倍数: {{ddzdata.multipleAddition}}, 金额: {{(ddzdata.bong + 1) * ddzdata.multipleAddition * ddzdata.multiple}}。
+                </span>
+                <span v-if="stage == '游戏结束' && ddzdata.chupai.length == 0" style="margin-left:120px;">
+                    游戏结束，没有人当【地主】。
+                </span>
+            </div>
+        </div>
+        <!--游戏环节结束-->
+
+        <div v-if="wsConnectState == 1">
+            <hr />
+            <div v-if="currentChannel.chan">
+                <h1>聊天室：{{currentChannel.chan}}</h1>
+                <div>本项目采用开源IM：<a href="https://github.com/2881099/im" target="_blank">https://github.com/2881099/im</a></div>
+                <input type="text" style="width:300px;" v-model="inputChannelMsg.content" />
+                <input type="button" value="发送" @click="if(!inputChannelMsg.content)return alert('请输入内容'); SendChannelMsg(inputChannelMsg);inputChannelMsg.content=''" />
+                <div class="pre-scrollable mt-3" style="height:300px;">
+                    <div v-for="msg in currentChannel.msgs" style="margin-bottom:9px;">
+                        <div v-if="msg.msg.type == 'welcome'">欢迎 {{msg.senderNick||msg.sender}} 加入</div>
+                        <div v-else-if="msg.msg.type == 'text'">
+                            <div style="color:#aaa;">{{msg.senderNick||msg.sender}} {{new Date(msg.time)}} 说：{{msg.msg.content}}</div>
+                        </div>
+                        <div v-else>
+                            {{msg}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <style>
+            body {
+                margin: 0px;
+                padding: 0px;
+                font-size: 14px;
+            }
+
+            @font-face {
+                font-family: PokerFace;
+                src: url('poker.ttf');
+            }
+
+            .glyphicon:after {
+                content: attr(name);
+                margin-left: -13px;
+            }
+
+            .poker {
+                font-family: PokerFace;
+                font-size: 120px;
+                /* background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAACMCAIAAAAfq3tiAAABqklEQVR4Ae3SsQ0AIBADMWD/nR8xAlc7/TVW9sws+xc4/4niCYCLPwAHLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmceCiQMw8DlwUiJnHgYsCMfM4cFEgZh4HLgrEzOPARYGYeRy4KBAzjwMXBWLmcRHuAucxBBUEgVosAAAAAElFTkSuQmCC");
+        background-position: 14px 14px;
+        background-repeat: no-repeat; */
+                position: absolute;
+                background-color: white;
+                margin: 0px;
+                padding: 0px;
+                width: 106px;
+                height: 142px;
+                -webkit-touch-callout: none; /* iOS Safari */
+                -webkit-user-select: none; /* Chrome/Safari/Opera */
+                -khtml-user-select: none; /* Konqueror */
+                -moz-user-select: none; /* Firefox */
+                -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently not supported by any browser */
+            }
+
+                .poker span {
+                    position: absolute;
+                    top: -13px;
+                }
+
+            button {
+                padding: 9px;
+            }
+    </style>
+
+    <script src="https://cdn.bootcss.com/vue/2.5.17/vue.min.js"></script>
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js" asp-append-version="true"></script>
+    <script>
+        var gsocket = null;
+        var gsocketTimeId = null;
+
+        function initvue11() {
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    playerId: null,
+                    player: null,
+                    editNick: null,
+
+                    stage: '',
+                    wsConnectState: 0,
+                    GetOrAddPlayering: false,
+
+                    desks: [],
+                    Sitdowning: false,
+
+                    currentChannel: { chan: 'ddz_chan', msgs: [] },
+                    inputChannelMsg: { type: 'text', content: '' },
+
+                    //ddzdata
+                    selectedPokers: {}, //出牌
+                    playTips: [],//提示出牌
+                    playTipsIndex: 0,
+                    updateindex: 0,
+
+                    ddzid: '',
+                    ddzdata: {
+                        Bong: 0,
+                        chupai: [],
+                        dipai: "Ai8F",
+                        multiple: 1,
+                        multipleAddition: 0,
+                        multipleAdditionMax: 3,
+                        playerIndex: -1,
+
+                        players: [
+                            {
+                                player: { Id: '玩家1', Nick: null, Balance: 0, IsOnline: false, GameState: "Idle" },
+                                poker: [],
+                                pokerText: [],
+                                pokerInit: [],
+                                role: '未知'
+                            },
+                            {
+                                player: { Id: '玩家2', Nick: null, Balance: 0, IsOnline: false, GameState: "Idle" },
+                                poker: [],
+                                pokerInit: [],
+                                role: '未知'
+                            },
+                            {
+                                player: { Id: '玩家3', Nick: null, Balance: 0, IsOnline: false, GameState: "Idle" },
+                                poker: [],
+                                pokerInit: [],
+                                role: '未知'
+                            }
+                        ]
+                    },
+
+                    mouseDownPlayer: null,
+                    mouseDownPlayerIndex: 0,
+                },
+
+                created() {
+                    this.GetPlayer();
+                },
+
+                methods: {
+                    GetPlayer() {
+                        var playerId = localStorage.getItem('playerId');
+                        if (playerId == null || playerId == 'undefined' || playerId == 'null') playerId = null;
+                        this.playerId = playerId;
+                        if (this.playerId == null) {
+                            this.stage = '创建玩家';
+                        } else {
+                            ajax('form', '/ddz/GetPlayer', { playerId: this.playerId }).then(rt => {
+                                if (!rt.success) return alert(rt.message);
+                                if (rt.data.player == null || rt.data.player.Nick == null || rt.data.player.Nick == '') {
+                                    this.stage = '创建玩家';
+                                    return;
+                                }
+                                this.player = rt.data.player;
+                                this.ConnectWebsocket();
+                            });
+                        }
+                    },
+
+                    GetOrAddPlayer() {
+                        this.GetOrAddPlayering = true;
+                        ajax('form', '/ddz/GetOrAddPlayer', { playerId: this.playerId, nick: this.editNick }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                            localStorage.setItem('playerId', rt.data.player.Id);
+                            this.playerId = rt.data.player.Id
+                            this.player = rt.data.player;
+                            this.ConnectWebsocket();
+                        });
+                    },
+
+                    ConnectWebsocket() {
+                        var _self = this;
+                        _self.wsConnectState = 1010;
+                        ajax('form', '/ddz/PrevConnectWebsocket', { playerId: this.playerId }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                            var url = rt.data.server;
+                            if (gsocket) gsocket.close();
+                            gsocket = null;
+                            gsocket = new WebSocket(url);
+                            gsocket.onopen = function (e) {
+                                console.log('websocket connect');
+                                _self.wsConnectState = 1;
+                                _self.GetDesks();
+                            };
+                            gsocket.onclose = function (e) {
+                                console.log('websocket disconnect');
+                                _self.wsConnectState = 0;
+                                gsocket = null;
+                                clearTimeout(gsocketTimeId);
+                                gsocketTimeId = setTimeout(function () {
+                                    _self.ConnectWebsocket.call(_self);
+                                }, 5000);
+                            };
+                            gsocket.onmessage = function (e) {
+                                try {
+                                    var msg = JSON.parse(e.data);
+                                    _self.onmessage.call(_self, msg);
+                                } catch (e) {
+                                    console.log(e);
+                                    return;
+                                }
+                            };
+                            gsocket.onerror = function (e) {
+                                console.log('websocket error');
+                                _self.wsConnectState = 0;
+                                gsocket = null;
+                                clearTimeout(gsocketTimeId);
+                                gsocketTimeId = setTimeout(function () {
+                                    _self.ConnectWebsocket.call(_self);
+                                }, 5000);
+                            };
+                        })
+                    },
+
+                    GetDesks() {
+                        this.SendChannelMsg({ type: 'welcome' });
+                        ajax('form', '/ddz/GetDesks', { playerId: this.playerId }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                            for (var a = 0; a < rt.data.desks.length; a++)
+                                this.desks.push(rt.data.desks[a]);
+                            this.stage = '选择桌位';
+                        });
+                    },
+
+                    Sitdown(deskId, pos) {
+                        if (this.Sitdowning) return alert('等待上一次操作完成...');
+                        this.Sitdowning = true;
+                        ajax('form', '/ddz/Sitdown', { playerId: this.playerId, deskId: deskId, pos: pos }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                            this.Sitdowning = false;
+                        });
+                    },
+
+                    Standup() {
+                        if (this.Sitdowning) return alert('等待上一次操作完成...');
+                        this.Sitdowning = true;
+                        ajax('form', '/ddz/Standup', { playerId: this.playerId }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                            alert('你已离开坐位');
+                            this.Sitdowning = false;
+                        });
+                    },
+
+                    onmessage: function (msg) {
+                        if (msg.type == 'Sitdown') { //坐下
+                            console.log(msg.msg);
+                            for (var a = 0; a < this.desks.length; a++) {
+                                if (this.desks[a].Id == msg.deskId) {
+                                    this.desks[a]['player' + msg.pos] = msg.player;
+                                    return;
+                                }
+                            }
+                            return;
+                        }
+                        if (msg.type == 'Standup') { //离开
+                            console.log(msg.msg);
+                            for (var a = 0; a < this.desks.length; a++) {
+                                if (this.desks[a].Id == msg.deskId) {
+                                    this.desks[a]['player' + msg.pos] = null;
+                                    return;
+                                }
+                            }
+                            return;
+                        }
+                        if (msg.type == 'GamePlay') { //游戏环节
+                            debugger
+                            this.ddzid = msg.ddzid;
+                            this.ddzdata = msg.data;
+                            this.stage = this.ddzdata.stage;
+
+                            this.selectedPokers = {};
+                            this.playTips.splice(0, this.playTips.length);
+                            this.playTipsIndex = 0;
+                            return;
+                        }
+
+                        try { msg = JSON.parse(msg); } catch{ }
+                        if (msg.type == 'chanmsg') { //群聊天消息
+                            this.currentChannel.msgs.unshift(msg);
+                            if (this.currentChannel.msgs.length > 120)
+                                this.currentChannel.msgs.splice(100, 20);
+                        }
+                    },
+
+                    SendChannelMsg: function (msg) {
+                        var data = { type: 'chanmsg', sender: this.playerId, senderNick: this.player.Nick, chan: this.currentChannel.chan, time: new Date().getTime(), msg: msg, };
+                        ajax('form', '/ddz/SendChannelMsg', { playerId: this.playerId, channel: this.currentChannel.chan, message: JSON.stringify(data) }).then(rt => {
+
+                        });
+                    },
+
+                    //游戏环节
+                    clickPoker(pk) {
+                        if (this.selectedPokers[pk]) delete this.selectedPokers[pk];
+                        else this.selectedPokers[pk] = 1;
+                        this.updateindex++;
+                    },
+                    mousedownPoker(player, index, pk) {
+                        this.mouseDownPlayer = player;
+                        this.mouseDownPlayerIndex = index;
+                    },
+                    mousemovePoker(player, index, pk) {
+
+                    },
+                    mouseupPoker(player, index, pk) {
+                        if (this.mouseDownPlayer === player) {
+                            var min = Math.min(this.mouseDownPlayerIndex, index);
+                            var max = Math.max(this.mouseDownPlayerIndex, index);
+                            for (var a = min; a <= max; a++) {
+                                if (this.selectedPokers[player.poker[a]]) delete this.selectedPokers[player.poker[a]];
+                                else this.selectedPokers[player.poker[a]] = 1;
+                            }
+                            this.updateindex++;
+                        }
+                    },
+                    SelectLandlord(playerId, multiple) {
+                        ajax('form', '/ddz/SelectLandlord', { id: this.ddzid, playerId: playerId, multiple: multiple }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                        });
+                    },
+                    SelectFarmer(playerId) {
+                        ajax('form', '/ddz/SelectFarmer', { id: this.ddzid, playerId: playerId }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                        });
+                    },
+                    Play(playerId) {
+                        var poker = [];
+                        var allpoker = this.ddzdata.players[this.ddzdata.playerIndex].poker;
+                        for (var b = 0; b < allpoker.length; b++) {
+                            if (this.selectedPokers[allpoker[b]]) {
+                                poker.push(allpoker[b]);
+                            }
+                        }
+                        if (poker.length == 0) return alert('请选择要出的牌');
+                        ajax('form', '/ddz/Play', { id: this.ddzid, playerId: playerId, poker: poker }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                        });
+                    },
+                    Pass(playerId) {
+                        ajax('form', '/ddz/Pass', { id: this.ddzid, playerId: playerId }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                        });
+                    },
+                    PlayTips(playerId) {
+                        if (this.playTips.length == 0) {
+                            ajax('form', '/ddz/PlayTips', { id: this.ddzid, playerId: playerId }).then(rt => {
+                                if (!rt.success) return alert(rt.message);
+                                this.selectedPokers = {};
+                                this.playTips.splice(0, this.playTips.length);
+                                this.playTipsIndex = 0;
+                                for (var a = 0; a < rt.data.tips.length; a++) this.playTips.push(rt.data.tips[a]);
+                                if (this.playTips.length == 0) {
+                                    this.Pass(playerId);
+                                } else {
+                                    this.NextPlayTips();
+                                }
+                            });
+                        } else {
+                            this.NextPlayTips();
+                        }
+                    },
+                    NextPlayTips() {
+                        if (this.playTipsIndex >= this.playTips.length) return;
+                        this.selectedPokers = {};
+                        this.updateindex++;
+                        var tips = this.playTips[this.playTipsIndex];
+                        for (var a = 0; a < tips.length; a++) this.selectedPokers[tips[a]] = 1;
+                        this.updateindex++;
+                        this.playTipsIndex++;
+                        if (this.playTipsIndex >= this.playTips.length) this.playTipsIndex = 0;
+                    }
+                },
+
+
+            })
+        }
+
+        initvue11();
+    </script>
+
+</body>
+</html>
