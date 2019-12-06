@@ -17,10 +17,9 @@
             正在与 WebSocket 服务器连线。。。
         </div>
 
-        <div v-if="stage == '创建玩家'">
-            <h3>.NETCore斗地主服务端 + HTML5前端</h3>
+        <div v-if="stage == '创建玩家'" class="text-center">
+            <h3>.NETCore斗地主服务端 + HTML5前端（多端网络版）</h3>
             <div>
-                <p>本项目最终目标为AI斗地主，机器人最优方案对打。</p>
 
                 <p>声明：本项目谥在学习，任何用于违法用途的行为与作者无关。</p>
 
@@ -33,18 +32,19 @@
                 <p>&nbsp;</p>
             </div>
             <p>
-                <Input v-model="editNick" placeholder="Enter something..." style="width:300px" />
+                <Input v-model="editNick" placeholder="Enter Nickname..." style="width:300px" />
                 <input v-if="!GetOrAddPlayering" type="button" @click="GetOrAddPlayer" value="创建玩家!" />
                 <input v-else type="button" value="Loading..." />
             </p>
             <p>&nbsp;</p>
             <div class="poker text-break" style="font-family:PokerFace;font-size:80px;width:80%;">CpPcDqQdErReFsSfGtTgHuUhIvViJwWjKxXkLyYlMzZmAnNaBoOb??</div>
         </div>
-        <div v-if="player">
-            欢迎您，{{player.Nick}}，积分：{{player.Score}}
+        <div v-if="player" class="row">
+            <div class="col-4">欢迎您，{{player.Nick}}，积分：{{player.Score}}</div>
+            <div class="col-8">提示：每桌三人，坐满自动开局，github: <a href="https://github.com/2881099/FightLandlord" target="_blank">https://github.com/2881099/FightLandlord</a></div>
         </div>
 
-        <div v-if="stage == '选择桌位'" class="row">
+        <div v-if="stage == '选择桌位'" class="row mt-3">
             <div v-for="desk in desks" class="col-3 border-info m-3">
                 {{desk.Title}}：
                 <input v-if="desk.player1" type="button" :value="desk.player1.Nick + '(积分：' + desk.player1.Score + ')'" :style="{backgroundColor:playerId == desk.player1.Id ? 'sandybrown' : 'lightskyblue'}" @click="if (playerId == desk.player1.Id) Standup()" />
@@ -57,8 +57,6 @@
                 <input v-else type="button" :value="'坐下'" @click="Sitdown(desk.Id, 3)" />
 
             </div>
-
-            <div class="col-12">每桌三人，坐满自动开局</div>
         </div>
 
         <!--游戏环节开始-->
@@ -296,6 +294,7 @@
                     GetOrAddPlayer() {
                         this.GetOrAddPlayering = true;
                         ajax('form', '/ddz/GetOrAddPlayer', { playerId: this.playerId, nick: this.editNick }).then(rt => {
+                            this.GetOrAddPlayering = false;
                             if (!rt.success) return alert(rt.message);
                             localStorage.setItem('playerId', rt.data.player.Id);
                             this.playerId = rt.data.player.Id
