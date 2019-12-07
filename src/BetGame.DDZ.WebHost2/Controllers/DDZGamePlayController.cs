@@ -9,6 +9,7 @@ using BetGame.DDZ;
 using BetGame.DDZ.WebHost2.Model;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Threading;
+using FreeSql;
 
 namespace BetGame.DDZ.WebHost2.Controllers
 {
@@ -19,15 +20,32 @@ namespace BetGame.DDZ.WebHost2.Controllers
         static Timer timer;
         static DDZGamePlayController()
         {
-            ConcurrentDictionary<Guid, (Player, DateTime)> offlineDic = new ConcurrentDictionary<Guid, (Player, DateTime)>();
+            ConcurrentDictionary<Guid, (Player, DateTime)> offlineSitdownDic = new ConcurrentDictionary<Guid, (Player, DateTime)>();
             timer = new Timer(state =>
             {
-                foreach (var k in offlineDic.Keys)
+                foreach (var k in offlineSitdownDic.Keys)
                 {
-                    if (offlineDic.TryGetValue(k, out var tryval) && DateTime.Now.Subtract(tryval.Item2).TotalSeconds > 4)
+                    if (offlineSitdownDic.TryGetValue(k, out var tryval) && DateTime.Now.Subtract(tryval.Item2).TotalSeconds > 4)
                     {
                         try
                         {
+                            var ddzid = RedisHelper.HGet("ddz_gameplay_player_ht", tryval.Item1.Id.ToString());
+                            if (!string.IsNullOrEmpty(ddzid))
+                            {
+                                var ddz = GamePlay.GetById(ddzid);
+                                foreach (var pl in ddz.Data.players)
+                                {
+                                    if (pl.id == tryval.Item1.Nick)
+                                    {
+                                        pl.score = ddz.Data.multiple * (ddz.Data.multipleAddition + ddz.Data.bong) * -2;
+                                        pl.status = GamePlayerStatus.逃跑;
+                                    }
+                                    else
+                                        pl.score = ddz.Data.multiple * (ddz.Data.multipleAddition + ddz.Data.bong);
+                                }
+                                ddz.Data.stage = GameStage.游戏结束;
+                                ddz.SaveData();
+                            }
                             StandupStatic(tryval.Item1).Wait();
                         }
                         catch { }
@@ -39,9 +57,24 @@ namespace BetGame.DDZ.WebHost2.Controllers
                 t =>
                 {
                     Console.WriteLine(t.clientId + "上线了");
-                    var onlineUids = ImHelper.GetClientListByOnline();
-                    ImHelper.SendMessage(t.clientId, onlineUids, $"用户{t.clientId}上线了");
-                    offlineDic.TryRemove(t.clientId, out var oldval);
+                    try
+                    {
+                        var onlineUids = ImHelper.GetClientListByOnline();
+                        ImHelper.SendMessage(t.clientId, onlineUids, $"用户{t.clientId}上线了");
+                        if (offlineSitdownDic.TryRemove(t.clientId, out var oldval))
+                        {
+                            var ddzid = RedisHelper.HGet("ddz_gameplay_player_ht", t.clientId.ToString());
+                            if (!string.IsNullOrEmpty(ddzid))
+                            {
+                                var ddz = GamePlay.GetById(ddzid);
+                                var player = Player.Find(t.clientId);
+                                SendGameMessage(ddz, new[] { player });
+                            }
+                        }
+                    }
+                    catch
+                    {
+                    }
                 },
                 t =>
                 {
@@ -53,7 +86,7 @@ namespace BetGame.DDZ.WebHost2.Controllers
                         {
                             var player = Player.Find(t.clientId);
                             if (player != null)
-                                offlineDic.TryAdd(t.clientId, (player, DateTime.Now));
+                                offlineSitdownDic.TryAdd(t.clientId, (player, DateTime.Now));
                         }
                     }
                     catch
@@ -61,8 +94,8 @@ namespace BetGame.DDZ.WebHost2.Controllers
                     }
                 });
 
-            GamePlay.OnGetData = id => RedisHelper.HGet<GameInfo>("ddz_gameplay_ht", id);
-            GamePlay.OnSaveData = (id, data) => RedisHelper.HSet("ddz_gameplay_ht", id, data);
+            GamePlay.OnGameOver = game => OnGameOver(game);
+            GamePlay.OnOperatorTimeout = game => SendGameMessage(game, null);
 
             RedisHelper.Del("sitdown_ht", "sitdown_player_ht");
         }
@@ -142,6 +175,32 @@ namespace BetGame.DDZ.WebHost2.Controllers
             return APIReturn.成功.SetData("desks", ret);
         }
 
+        async public static Task StandupStatic(Player player)
+        {
+            var sitdownKey = RedisHelper.HGet("sitdown_player_ht", player.Id.ToString());
+            if (!string.IsNullOrEmpty(sitdownKey))
+            {
+                RedisHelper.StartPipe(a => a.HDel("sitdown_player_ht", player.Id.ToString()).HDel("sitdown_ht", sitdownKey));
+                //通知消息，坐位有用户离开
+                var dp = sitdownKey.Split('_');
+                var deskId = int.Parse(dp[0]);
+                var desk = await Desk.FindAsync(deskId);
+                ImHelper.SendChanMessage(Guid.Empty, "ddz_chan", new
+                {
+                    type = "Standup",
+                    deskId = desk.Id,
+                    pos = int.Parse(dp[1]),
+                    msg = $"{player.Nick} 离开了座位 ({desk.Title}, POS：{dp[1]})"
+                });
+            }
+        }
+        [HttpPost("Standup")]
+        async public Task<APIReturn> Standup()
+        {
+            await CheckPlayer();
+            await StandupStatic(CurrentPlayer);
+            return APIReturn.成功;
+        }
         [HttpPost("Sitdown")]
         async public Task<APIReturn> Sitdown([FromForm] int deskId, [FromForm] int pos)
         {
@@ -178,66 +237,92 @@ namespace BetGame.DDZ.WebHost2.Controllers
                     players = players,
                     msg = $"{desk.Title} 三人就位，游戏开始，{players[0].Nick} VS {players[1].Nick} VS {players[2].Nick}"
                 });
-                RedisHelper.HMSet($"ddz_gameplay_ht{ddz.Id}", "players", players, "desk", desk);
+                RedisHelper.StartPipe(a => a
+                    .HMSet($"ddz_gameplay_ht{ddz.Id}", "players", players, "desk", desk)
+                    .HMSet("ddz_gameplay_player_ht", players[0].Id.ToString(), ddz.Id, players[1].Id.ToString(), ddz.Id, players[2].Id.ToString(), ddz.Id, 
+                        players[0].Nick, ddz.Id, players[1].Nick, ddz.Id, players[2].Nick, ddz.Id));
                 SendGameMessage(ddz, players);
             }
             return APIReturn.成功;
         }
 
-        async public static Task StandupStatic(Player player)
-        {
-            var sitdownKey = RedisHelper.HGet("sitdown_player_ht", player.Id.ToString());
-            if (!string.IsNullOrEmpty(sitdownKey))
-            {
-                RedisHelper.StartPipe(a => a.HDel("sitdown_player_ht", player.Id.ToString()).HDel("sitdown_ht", sitdownKey));
-                //通知消息，坐位有用户离开
-                var dp = sitdownKey.Split('_');
-                var deskId = int.Parse(dp[0]);
-                var desk = await Desk.FindAsync(deskId);
-                ImHelper.SendChanMessage(Guid.Empty, "ddz_chan", new
-                {
-                    type = "Standup",
-                    deskId = desk.Id,
-                    pos = int.Parse(dp[1]),
-                    msg = $"{player.Nick} 离开了座位 ({desk.Title}, POS：{dp[1]})"
-                });
-            }
-        }
-        [HttpPost("Standup")]
-        async public Task<APIReturn> Standup()
-        {
-            await CheckPlayer();
-            await StandupStatic(CurrentPlayer);
-            return APIReturn.成功;
-        }
-
         //游戏环节
-        public void SendGameMessage(GamePlay game, Player[] players)
+        public static void SendGameMessage(GamePlay game, Player[] players)
         {
             if (players == null)
                 players = RedisHelper.HGet<Player[]>($"ddz_gameplay_ht{game.Id}", "players");
 
-            ImHelper.SendMessage(Guid.Empty, new[] { players[0].Id }, new
+            foreach (var player in players)
             {
-                type = "GamePlay",
-                ddzid = game.Id,
-                data = game.Data.CloneToPlayer(players[0].Nick)
-            });
-            ImHelper.SendMessage(Guid.Empty, new[] { players[1].Id }, new
-            {
-                type = "GamePlay",
-                ddzid = game.Id,
-                data = game.Data.CloneToPlayer(players[1].Nick)
-            });
-            ImHelper.SendMessage(Guid.Empty, new[] { players[2].Id }, new
-            {
-                type = "GamePlay",
-                ddzid = game.Id,
-                data = game.Data.CloneToPlayer(players[2].Nick)
-            });
+                ImHelper.SendMessage(Guid.Empty, new[] { player.Id }, new
+                {
+                    type = "GamePlay",
+                    ddzid = game.Id,
+                    data = game.Data.CloneToPlayer(player.Nick)
+                });
+            }
         }
 
-		GamePlay DDZGet(string id) {
+        static object updateScoreLock = new object();
+        public static void OnGameOver(GamePlay game)
+        {
+            var gpdb = RedisHelper.StartPipe(a => a
+                .HGet<Player[]>($"ddz_gameplay_ht{game.Id}", "players")
+                .HGet<Desk>($"ddz_gameplay_ht{game.Id}", "desk"));
+            var players = gpdb[0] as Player[];
+            var desk = gpdb[1] as Desk;
+            ImHelper.LeaveChan(players[0].Id, desk.Title);
+            ImHelper.LeaveChan(players[1].Id, desk.Title);
+            ImHelper.LeaveChan(players[2].Id, desk.Title);
+            RedisHelper.StartPipe(a => a
+                .HDel($"ddz_gameplay_ht{game.Id}", "players", "desk")
+                .HDel("ddz_gameplay_player_ht", players[0].Id.ToString(), players[1].Id.ToString(), players[2].Id.ToString(),
+                    players[0].Nick, players[1].Nick, players[2].Nick)
+                .HDel("sitdown_ht", new[] { $"{desk.Id}_1", $"{desk.Id}_2", $"{desk.Id}_3" })
+                .HDel("sitdown_player_ht", players[0].Id.ToString(), players[1].Id.ToString(), players[2].Id.ToString()));
+
+            Func<GamePlayer, string> getPlayerStats = pl => $"{pl.id}({pl.score})";
+
+            var playerScoreIncr = game.Data.players.Select(a => (long)a.score).ToArray();
+            lock (updateScoreLock)
+            {
+                BaseEntity.Orm.Update<Player>(players[0]).Set(a => a.Score + playerScoreIncr[0]).ExecuteAffrows();
+                BaseEntity.Orm.Update<Player>(players[1]).Set(a => a.Score + playerScoreIncr[1]).ExecuteAffrows();
+                BaseEntity.Orm.Update<Player>(players[2]).Set(a => a.Score + playerScoreIncr[2]).ExecuteAffrows();
+            }
+            players[0].Score += playerScoreIncr[0];
+            players[1].Score += playerScoreIncr[1];
+            players[2].Score += playerScoreIncr[2];
+
+            ImHelper.SendChanMessage(Guid.Empty, "ddz_chan", new
+            {
+                type = "GameOvered",
+                deskId = desk.Id,
+                players = players,
+                msg = $"{desk.Title} 【游戏结束】，本局炸弹 {game.Data.bong}个，{game.Data.players[0].id}({game.Data.players[0].score})，{game.Data.players[1].id}({game.Data.players[1].score})，{game.Data.players[2].id}({game.Data.players[2].score})"
+            });
+            SendGameMessage(game, players);
+        }
+
+        [HttpPost("CancelAutoPlay")]
+        public APIReturn CancelAutoPlay([FromForm] string id, [FromForm] string playerId)
+        {
+            var ddz = DDZGet(id);
+            foreach(var pl in ddz.Data.players) 
+                if (pl.id == playerId)
+                {
+                    if (pl.status == GamePlayerStatus.托管)
+                    {
+                        pl.status = GamePlayerStatus.正常;
+                        ddz.SaveData();
+                        SendGameMessage(ddz, null);
+                    }
+                    break;
+                }
+            return APIReturn.成功;
+        }
+
+        GamePlay DDZGet(string id) {
 			var ddz = GamePlay.GetById(id);
 			return ddz;
 		}
@@ -289,5 +374,5 @@ namespace BetGame.DDZ.WebHost2.Controllers
             SendGameMessage(ddz, null);
             return APIReturn.成功;
 		}
-	}
+    }
 }

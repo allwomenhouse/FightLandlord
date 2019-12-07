@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BetGame.DDZ {
@@ -41,6 +42,12 @@ namespace BetGame.DDZ {
 		/// </summary>
 		public GameStage stage { get; set; }
 
+        /// <summary>
+        /// 超时未操作，使用它与当前时间(utc)作对比判断，可惩罚 playerIndex
+        /// </summary>
+        public DateTime operationTimeout { get; set; }
+        public int operationTimeoutSeconds => (int)operationTimeout.Subtract(DateTime.UtcNow).TotalSeconds;
+
         public GameInfo CloneToPlayer(string playerId)
         {
             var game = new GameInfo
@@ -51,7 +58,8 @@ namespace BetGame.DDZ {
                 bong = bong,
                 playerIndex = playerIndex,
                 chupai = chupai,
-                stage = stage
+                stage = stage,
+                operationTimeout = operationTimeout
             };
             game.players = new List<GamePlayer>();
             for (var a = 0; a < players.Count; a++)
@@ -59,9 +67,11 @@ namespace BetGame.DDZ {
                 var gp = new GamePlayer
                 {
                     id = players[a].id,
-                    role = players[a].role,
                     poker = players[a].poker,
-                    pokerInit = players[a].pokerInit
+                    pokerInit = players[a].pokerInit,
+                    role = players[a].role,
+                    score = players[a].score,
+                    status = players[a].status
                 };
                 game.players.Add(gp);
                 if (players[a].id != playerId)
@@ -102,7 +112,18 @@ namespace BetGame.DDZ {
 		/// 玩家角色
 		/// </summary>
 		public GamePlayerRole role { get; set; }
+
+        /// <summary>
+        /// 计算结果
+        /// </summary>
+        public decimal score { get; set; }
+
+        /// <summary>
+        /// 状态
+        /// </summary>
+        public GamePlayerStatus status { get; set; }
 	}
 
 	public enum GamePlayerRole { 未知, 地主, 农民 }
+    public enum GamePlayerStatus { 正常, 托管, 逃跑 }
 }

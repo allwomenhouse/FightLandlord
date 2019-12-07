@@ -41,7 +41,7 @@
         </div>
         <div v-if="player" class="row">
             <div class="col-4">欢迎您，{{player.Nick}}，积分：{{player.Score}}</div>
-            <div class="col-8">提示：每桌三人，坐满自动开局，github: <a href="https://github.com/2881099/FightLandlord" target="_blank">https://github.com/2881099/FightLandlord</a></div>
+            <div class="col-8">提示：每桌三人，坐满自动开局(Chrome PC 版本访问)，github: <a href="https://github.com/2881099/FightLandlord" target="_blank">https://github.com/2881099/FightLandlord</a></div>
         </div>
 
         <div v-if="stage == '选择桌位'" class="row mt-3">
@@ -81,25 +81,26 @@
                     <div style="clear:both;"></div>
                 </div>
                 <div style="float:right;">
-                    <div style="text-align: right;">{{gp.id}} <span :style="{ color: gp.role == '地主' ? 'red' : gp.role == '农民' ? 'green' : '#aaa'}">【{{gp.role}}】</span></div>
+                    <div style="text-align: right;"><span v-if="gp.status == '托管'" class="mr-3 text-info">托管中...</span>{{gp.id}} <span :style="{ color: gp.role == '地主' ? 'red' : gp.role == '农民' ? 'green' : '#aaa'}">【{{gp.role}}】</span></div>
 
                     <div v-if="stage == '叫地主' && gpidx == ddzdata.playerIndex" style="margin-top:36px;">
                         <div v-if="gp.id == player.Nick">
-                            <Button v-for="maddtion in ddzdata.multipleAdditionMax"
-                                    v-if="maddtion > ddzdata.multipleAddition" @click="SelectLandlord(gp.id, maddtion)" type="primary">
-                                {{maddtion}}分
-                            </Button>
-                            <Button @click="SelectFarmer(gp.id)" type="primary">不叫</Button>
+                            <input type="button" v-for="maddtion in ddzdata.multipleAdditionMax"
+                                    v-if="maddtion > ddzdata.multipleAddition" @click="SelectLandlord(gp.id, maddtion)" class="btn-primary" :value="maddtion + '分'"/>
+                            <input type="button" @click="SelectFarmer(gp.id)" class="btn-primary" value="不叫"/>
                         </div>
-                        <div v-else>等待操作</div>
+                        <div v-else class="font-weight-bold">等待操作({{ddzdata.operationTimeoutSeconds}})</div>
                     </div>
                     <div v-if="stage == '斗地主' && gpidx == ddzdata.playerIndex" style="margin-top:36px;">
                         <div v-if="gp.id == player.Nick">
-                            <Button v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(gp.id)" type="primary">不要</Button>
-                            <Button @click="Play(gp.id)" type="primary">出牌</Button>
-                            <Button @click="PlayTips(gp.id)" type="primary">提示</Button>
+                            <input type="button" v-if="ddzdata.chupai.length > 0 && ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex != ddzdata.playerIndex" @click="Pass(gp.id)" class="btn-info" value="不要"/>
+                            <input type="button" @click="Play(gp.id)" class="btn-info" value="出牌"/>
+                            <input type="button" @click="PlayTips(gp.id)" class="btn-primary" value="提示"/>
                         </div>
-                        <div v-else>等待操作</div>
+                        <div v-else class="font-weight-bold">等待操作({{ddzdata.operationTimeoutSeconds}})</div>
+                    </div>
+                    <div v-if="gp.status == '托管' && gp.id == player.Nick" style="margin-top:36px;">
+                        <input type="button" @click="CancelAutoPlay(gp.id)" class="btn-primary" value="正在托管中，点击取消托管" />
                     </div>
                 </div>
                 <div style="clear:both;"></div>
@@ -116,14 +117,19 @@
                             :style="{ fontFamily: 'PokerFace', fontSize: '60px', cursor: 'pointer', color: (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] < 53 && (ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 1 || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] % 4 == 3) || ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex] == 52 ? 'black' : 'red'),}"><!--{{pk}}-->{{'CpPcDqQdErReFsSfGtTgHuUhIvViJwWjKxXkLyYlMzZmAnNaBoOb???'[ddzdata.chupai[ddzdata.chupai.length - 1].result.value[pkIndex]]}}</span>
                 </span>
 
-                <span v-if="stage == '游戏结束' && ddzdata.chupai.length > 0" style="margin-left:120px;">
+                <div v-if="stage == '游戏结束' && (ddzdata.players[0].status == '逃跑' || ddzdata.players[1].status == '逃跑' || ddzdata.players[2].status == '逃跑')" style="margin-left:120px;">
+                    游戏结束, <span v-for="dp in ddzdata.players" v-if="dp.status == '逃跑'">【{{dp.id}}】 逃跑, 扣除 {{dp.score*-1}} 分</span>
+
+                    炸弹: {{ddzdata.bong}}, 倍数: {{ddzdata.multipleAddition}}<span v-for="dp in ddzdata.players" v-if="dp.status != '逃跑'">, {{dp.id}}: +{{dp.score}}</span>。
+                </div>
+                <div v-else-if="stage == '游戏结束' && ddzdata.chupai.length > 0" style="margin-left:120px;">
                     游戏结束, 【{{ddzdata.players[ddzdata.chupai[ddzdata.chupai.length - 1].playerIndex].role}}】 胜利,
 
-                    炸弹: {{ddzdata.bong}}, 倍数: {{ddzdata.multipleAddition}}, 金额: {{(ddzdata.bong + 1) * ddzdata.multipleAddition * ddzdata.multiple}}。
-                </span>
-                <span v-if="stage == '游戏结束' && ddzdata.chupai.length == 0" style="margin-left:120px;">
+                    炸弹: {{ddzdata.bong}}, 倍数: {{ddzdata.multipleAddition}}<span v-for="dp in ddzdata.players">, {{dp.id}}: {{dp.score}}</span>。
+                </div>
+                <div v-else-if="stage == '游戏结束' && ddzdata.chupai.length == 0" style="margin-left:120px;">
                     游戏结束，没有人当【地主】。
-                </span>
+                </div>
             </div>
         </div>
         <!--游戏环节结束-->
@@ -140,6 +146,9 @@
                         <div v-if="msg.msg.type == 'welcome'">欢迎 {{msg.senderNick||msg.sender}} 加入</div>
                         <div v-else-if="msg.msg.type == 'text'">
                             <div style="color:#aaa;">{{msg.senderNick||msg.sender}} {{new Date(msg.time)}} 说：{{msg.msg.content}}</div>
+                        </div>
+                        <div v-else-if="msg.type && msg.msg">
+                            {{msg.msg}}
                         </div>
                         <div v-else>
                             {{msg}}
@@ -239,6 +248,8 @@
                         multipleAddition: 0,
                         multipleAdditionMax: 3,
                         playerIndex: -1,
+                        operationTimeout: '',
+                        operationTimeoutSeconds: 0,
 
                         players: [
                             {
@@ -246,19 +257,25 @@
                                 poker: [],
                                 pokerText: [],
                                 pokerInit: [],
-                                role: '未知'
+                                role: '未知',
+                                score: 0,
+                                status: '正常'
                             },
                             {
                                 player: { Id: '玩家2', Nick: null, Balance: 0, IsOnline: false, GameState: "Idle" },
                                 poker: [],
                                 pokerInit: [],
-                                role: '未知'
+                                role: '未知',
+                                score: 0,
+                                status: '正常'
                             },
                             {
                                 player: { Id: '玩家3', Nick: null, Balance: 0, IsOnline: false, GameState: "Idle" },
                                 poker: [],
                                 pokerInit: [],
-                                role: '未知'
+                                role: '未知',
+                                score: 0,
+                                status: '正常'
                             }
                         ]
                     },
@@ -397,8 +414,17 @@
                             }
                             return;
                         }
+                        if (msg.type == 'GameStarted') { //游戏开始
+                            console.log(msg.msg);
+                            this.currentChannel.msgs.unshift(msg);
+                            return;
+                        }
+                        if (msg.type == 'GameOvered') { //游戏结束
+                            console.log(msg.msg);
+                            this.currentChannel.msgs.unshift(msg);
+                            return;
+                        }
                         if (msg.type == 'GamePlay') { //游戏环节
-                            debugger
                             this.ddzid = msg.ddzid;
                             this.ddzdata = msg.data;
                             this.stage = this.ddzdata.stage;
@@ -406,10 +432,21 @@
                             this.selectedPokers = {};
                             this.playTips.splice(0, this.playTips.length);
                             this.playTipsIndex = 0;
+
+                            if (this.stage == '游戏结束') {
+                                for (var a = 0; a < this.ddzdata.players.length; a++)
+                                    if (this.ddzdata.players[a].id == this.player.Nick) {
+                                        this.player.Score += this.ddzdata.players[a].score;
+                                        break;
+                                    }
+                            }
+
+                            if (this.ddzdata.operationTimeoutSeconds > 0 && this.ddzdata.operationTimeoutSeconds < 100)
+                                this.operationTimeoutTimer();
                             return;
                         }
 
-                        try { msg = JSON.parse(msg); } catch{ }
+                        try { msg = JSON.parse(msg); } catch (e) { }
                         if (msg.type == 'chanmsg') { //群聊天消息
                             this.currentChannel.msgs.unshift(msg);
                             if (this.currentChannel.msgs.length > 120)
@@ -425,6 +462,12 @@
                     },
 
                     //游戏环节
+                    operationTimeoutTimer() {
+                        clearTimeout(top.timernnnxx);
+                        this.ddzdata.operationTimeoutSeconds--;
+                        if (this.ddzdata.operationTimeoutSeconds > 0)
+                            top.timernnnxx = setTimeout(this.operationTimeoutTimer, 1000);
+                    },
                     clickPoker(pk) {
                         if (this.selectedPokers[pk]) delete this.selectedPokers[pk];
                         else this.selectedPokers[pk] = 1;
@@ -503,6 +546,11 @@
                         this.updateindex++;
                         this.playTipsIndex++;
                         if (this.playTipsIndex >= this.playTips.length) this.playTipsIndex = 0;
+                    },
+                    CancelAutoPlay(playerId) {
+                        ajax('form', '/ddz/CancelAutoPlay', { id: this.ddzid, playerId: playerId }).then(rt => {
+                            if (!rt.success) return alert(rt.message);
+                        });
                     }
                 },
 

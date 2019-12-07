@@ -16,4 +16,6 @@
     <ProjectReference Include="..\BetGame.DDZ\BetGame.DDZ.csproj" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
+
 </Project>
