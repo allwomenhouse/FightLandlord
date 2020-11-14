@@ -10,12 +10,14 @@ using BetGame.DDZ.WebHost2.Model;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Threading;
 using FreeSql;
+using FreeRedis;
 
 namespace BetGame.DDZ.WebHost2.Controllers
 {
 	[Route("ddz"), ServiceFilter(typeof(CustomExceptionFilter))]
 	public class DDZGamePlayController : Controller
     {
+        static RedisClient redis => Startup.Redis;
 
         static Timer timer;
         static DDZGamePlayController()
@@ -29,7 +31,7 @@ namespace BetGame.DDZ.WebHost2.Controllers
                     {
                         try
                         {
-                            var ddzid = RedisHelper.HGet("ddz_gameplay_player_ht", tryval.Item1.Id.ToString());
+                            var ddzid = redis.HGet("ddz_gameplay_player_ht", tryval.Item1.Id.ToString());
                             if (!string.IsNullOrEmpty(ddzid))
                             {
                                 var ddz = GamePlay.GetById(ddzid);
@@ -63,7 +65,7 @@ namespace BetGame.DDZ.WebHost2.Controllers
                         ImHelper.SendMessage(t.clientId, onlineUids, $"用户{t.clientId}上线了");
                         if (offlineSitdownDic.TryRemove(t.clientId, out var oldval))
                         {
-                            var ddzid = RedisHelper.HGet("ddz_gameplay_player_ht", t.clientId.ToString());
+                            var ddzid = redis.HGet("ddz_gameplay_player_ht", t.clientId.ToString());
                             if (!string.IsNullOrEmpty(ddzid))
                             {
                                 var ddz = GamePlay.GetById(ddzid);
@@ -82,7 +84,7 @@ namespace BetGame.DDZ.WebHost2.Controllers
                     try
                     {
                         //用户离线后4秒，才退出座位
-                        if (RedisHelper.HExists("sitdown_player_ht", t.clientId.ToString()))
+                        if (redis.HExists("sitdown_player_ht", t.clientId.ToString()))
                         {
                             var player = Player.Find(t.clientId);
                             if (player != null)
@@ -97,7 +99,7 @@ namespace BetGame.DDZ.WebHost2.Controllers
             GamePlay.OnGameOver = game => OnGameOver(game);
             GamePlay.OnOperatorTimeout = game => SendGameMessage(game, null);
 
-            RedisHelper.Del("sitdown_ht", "sitdown_player_ht");
+            redis.Del("sitdown_ht", "sitdown_player_ht");
         }
         [FromForm(Name = "playerId")]
         public Guid PlayerId { get; set; }
@@ -163,7 +165,7 @@ namespace BetGame.DDZ.WebHost2.Controllers
             await CheckPlayer();
             var desks = await Desk.Select.OrderBy(a => a.Sort).ToListAsync();
             var keys = desks.Select(a => new[] { $"{a.Id}_1", $"{a.Id}_2", $"{a.Id}_3" }).SelectMany(a => a).ToArray();
-            var vals = RedisHelper.HMGet<Player>("sitdown_ht", keys);
+            var vals = redis.HMGet<Player>("sitdown_ht", keys);
             var ret = desks.Select((a, b) => new
             {
                 a.Id,
@@ -177,10 +179,15 @@ namespace BetGame.DDZ.WebHost2.Controllers
 
         async public static Task StandupStatic(Player player)
         {
-            var sitdownKey = RedisHelper.HGet("sitdown_player_ht", player.Id.ToString());
+            var sitdownKey = redis.HGet("sitdown_player_ht", player.Id.ToString());
             if (!string.IsNullOrEmpty(sitdownKey))
             {
-                RedisHelper.StartPipe(a => a.HDel("sitdown_player_ht", player.Id.ToString()).HDel("sitdown_ht", sitdownKey));
+                using (var pipe = redis.StartPipe())
+                {
+                    pipe.HDel("sitdown_player_ht", player.Id.ToString());
+                    pipe.HDel("sitdown_ht", sitdownKey);
+                    pipe.EndPipe();
+                }
                 //通知消息，坐位有用户离开
                 var dp = sitdownKey.Split('_');
                 var deskId = int.Parse(dp[0]);
@@ -208,10 +215,10 @@ namespace BetGame.DDZ.WebHost2.Controllers
             var desk = await Desk.FindAsync(deskId);
             if (desk == null || pos < 1 || pos > 3) throw new Exception("桌位或座位不存在");
             await Standup();
-            var sitdowned = RedisHelper.HGet<Player>("sitdown_ht", $"{desk.Id}_{pos}");
+            var sitdowned = redis.HGet<Player>("sitdown_ht", $"{desk.Id}_{pos}");
             if (sitdowned != null && sitdowned.Id != CurrentPlayer.Id) throw new Exception("该桌位已被其他用户坐下");
-            if (!RedisHelper.HSetNx("sitdown_ht", $"{desk.Id}_{pos}", CurrentPlayer)) throw new Exception("该桌位已被其他用户坐下");
-            RedisHelper.HSet("sitdown_player_ht", CurrentPlayer.Id.ToString(), $"{desk.Id}_{pos}");
+            if (!redis.HSetNx("sitdown_ht", $"{desk.Id}_{pos}", CurrentPlayer)) throw new Exception("该桌位已被其他用户坐下");
+            redis.HSet("sitdown_player_ht", CurrentPlayer.Id.ToString(), $"{desk.Id}_{pos}");
             //通知消息，坐位有用户坐下
             ImHelper.SendChanMessage(Guid.Empty, "ddz_chan", new
             {
@@ -222,7 +229,7 @@ namespace BetGame.DDZ.WebHost2.Controllers
                 msg = $"{CurrentPlayer.Nick} 坐下了座位 ({desk.Title}, POS：{pos})"
             });
             //判断三人都在，游戏开始
-            var players = RedisHelper.HMGet<Player>("sitdown_ht", new[] { $"{desk.Id}_1", $"{desk.Id}_2", $"{desk.Id}_3" });
+            var players = redis.HMGet<Player>("sitdown_ht", new[] { $"{desk.Id}_1", $"{desk.Id}_2", $"{desk.Id}_3" });
             if (players.Where(a => a == null).Any() == false)
             {
                 var ddz = GamePlay.Create(players.Select(a => a.Nick).ToArray(), 1, 3);
@@ -237,10 +244,13 @@ namespace BetGame.DDZ.WebHost2.Controllers
                     players = players,
                     msg = $"{desk.Title} 三人就位，游戏开始，{players[0].Nick} VS {players[1].Nick} VS {players[2].Nick}"
                 });
-                RedisHelper.StartPipe(a => a
-                    .HMSet($"ddz_gameplay_ht{ddz.Id}", "players", players, "desk", desk)
-                    .HMSet("ddz_gameplay_player_ht", players[0].Id.ToString(), ddz.Id, players[1].Id.ToString(), ddz.Id, players[2].Id.ToString(), ddz.Id, 
-                        players[0].Nick, ddz.Id, players[1].Nick, ddz.Id, players[2].Nick, ddz.Id));
+                using (var pipe = redis.StartPipe())
+                {
+                    pipe.HMSet($"ddz_gameplay_ht{ddz.Id}", "players", players, "desk", desk);
+                    pipe.HMSet("ddz_gameplay_player_ht", players[0].Id.ToString(), ddz.Id, players[1].Id.ToString(), ddz.Id, players[2].Id.ToString(), ddz.Id,
+                        players[0].Nick, ddz.Id, players[1].Nick, ddz.Id, players[2].Nick, ddz.Id);
+                    pipe.EndPipe();
+                }
                 SendGameMessage(ddz, players);
             }
             return APIReturn.成功;
@@ -250,7 +260,7 @@ namespace BetGame.DDZ.WebHost2.Controllers
         public static void SendGameMessage(GamePlay game, Player[] players)
         {
             if (players == null)
-                players = RedisHelper.HGet<Player[]>($"ddz_gameplay_ht{game.Id}", "players");
+                players = redis.HGet<Player[]>($"ddz_gameplay_ht{game.Id}", "players");
 
             foreach (var player in players)
             {
@@ -266,21 +276,27 @@ namespace BetGame.DDZ.WebHost2.Controllers
         static object updateScoreLock = new object();
         public static void OnGameOver(GamePlay game)
         {
-            var gpdb = RedisHelper.StartPipe(a => a
-                .HGet<Player[]>($"ddz_gameplay_ht{game.Id}", "players")
-                .HGet<Desk>($"ddz_gameplay_ht{game.Id}", "desk"));
+            object[] gpdb = null;
+            using (var pipe = redis.StartPipe())
+            {
+                pipe.HGet<Player[]>($"ddz_gameplay_ht{game.Id}", "players");
+                pipe.HGet<Desk>($"ddz_gameplay_ht{game.Id}", "desk");
+                gpdb = pipe.EndPipe();
+            }
             var players = gpdb[0] as Player[];
             var desk = gpdb[1] as Desk;
             ImHelper.LeaveChan(players[0].Id, desk.Title);
             ImHelper.LeaveChan(players[1].Id, desk.Title);
             ImHelper.LeaveChan(players[2].Id, desk.Title);
-            RedisHelper.StartPipe(a => a
-                .HDel($"ddz_gameplay_ht{game.Id}", "players", "desk")
-                .HDel("ddz_gameplay_player_ht", players[0].Id.ToString(), players[1].Id.ToString(), players[2].Id.ToString(),
-                    players[0].Nick, players[1].Nick, players[2].Nick)
-                .HDel("sitdown_ht", new[] { $"{desk.Id}_1", $"{desk.Id}_2", $"{desk.Id}_3" })
-                .HDel("sitdown_player_ht", players[0].Id.ToString(), players[1].Id.ToString(), players[2].Id.ToString()));
-
+            using (var pipe = redis.StartPipe())
+            {
+                pipe.HDel($"ddz_gameplay_ht{game.Id}", "players", "desk");
+                pipe.HDel("ddz_gameplay_player_ht", players[0].Id.ToString(), players[1].Id.ToString(), players[2].Id.ToString(),
+                    players[0].Nick, players[1].Nick, players[2].Nick);
+                pipe.HDel("sitdown_ht", new[] { $"{desk.Id}_1", $"{desk.Id}_2", $"{desk.Id}_3" });
+                pipe.HDel("sitdown_player_ht", players[0].Id.ToString(), players[1].Id.ToString(), players[2].Id.ToString());
+                pipe.EndPipe();
+            }
             Func<GamePlayer, string> getPlayerStats = pl => $"{pl.id}({pl.score})";
 
             var playerScoreIncr = game.Data.players.Select(a => (long)a.score).ToArray();
@@ -353,9 +369,13 @@ namespace BetGame.DDZ.WebHost2.Controllers
 			var ddz = DDZGet(id);
 			ddz.Play(playerId, poker);
 
-            var gpdb = RedisHelper.StartPipe(a => a
-                .HGet<Player[]>($"ddz_gameplay_ht{ddz.Id}", "players")
-                .HGet<Desk>($"ddz_gameplay_ht{ddz.Id}", "desk"));
+            object[] gpdb = null;
+            using (var pipe = redis.StartPipe())
+            {
+                pipe.HGet<Player[]>($"ddz_gameplay_ht{ddz.Id}", "players");
+                pipe.HGet<Desk>($"ddz_gameplay_ht{ddz.Id}", "desk");
+                gpdb = pipe.EndPipe();
+            }
             var players = gpdb[0] as Player[];
             var desk = gpdb[1] as Desk;
             SendGameMessage(ddz, gpdb[0] as Player[]);

@@ -103,6 +103,7 @@ namespace BetGame.DDZ
 				this.Id = Guid.NewGuid().ToString();
 			}
 		}
+		ConcurrentDictionary<string, GameInfo> _memoryDb = new ConcurrentDictionary<string, GameInfo>();
 		public void SaveData() {
             if (this.Data.stage == GameStage.游戏结束)
             {
@@ -115,13 +116,14 @@ namespace BetGame.DDZ
 				OnSaveData(this.Id, this.Data);
 				return;
 			}
-			RedisHelper.HSet($"DDZrdb", this.Id, this.Data);
+			_memoryDb.TryAdd(this.Id, this.Data);
+			if (this.Data.stage == GameStage.游戏结束) _memoryDb.TryRemove(this.Id, out var old);
 		}
 		private GameInfo EventGetData(string id) {
 			if (OnGetData != null) {
 				return OnGetData(id);
 			}
-			return RedisHelper.HGet<GameInfo>("DDZrdb", id);
+			return _memoryDb.TryGetValue(id, out var tryout) ? tryout : null;
 		}
 
 		/// <summary>

@@ -1,15 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+using FreeRedis;
 using FreeSql;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using System;
+using System.Diagnostics;
 
 namespace BetGame.DDZ.WebHost2
 {
@@ -30,12 +26,16 @@ namespace BetGame.DDZ.WebHost2
                 e.ModifyResult.MapType = typeof(string);
             });
             fsql.Aop.CurdBefore += new EventHandler<FreeSql.Aop.CurdBeforeEventArgs>((_, e) => Trace.WriteLine(e.Sql));
-            BaseEntity.Initialization(fsql);
+            BaseEntity.Initialization(fsql, null);
 
             Fsql = fsql;
             Configuration = configuration;
 
-            RedisHelper.Initialization(new CSRedis.CSRedisClient(configuration["redis"]));
+            Redis = new RedisClient(configuration["redis"]);
+            Redis.Serialize = obj => JsonConvert.SerializeObject(obj);
+            Redis.Deserialize = (json, type) => JsonConvert.DeserializeObject(json, type);
+            DDZ.GamePlay.OnSaveData = (id, d) => Redis.HSet($"DDZrdb", id, d);
+            DDZ.GamePlay.OnGetData = id => Redis.HGet<GameInfo>("DDZrdb", id);
 
             Newtonsoft.Json.JsonConvert.DefaultSettings = () => {
                 var st = new Newtonsoft.Json.JsonSerializerSettings();
@@ -46,11 +46,13 @@ namespace BetGame.DDZ.WebHost2
             };
         }
 
-        public IFreeSql Fsql { get; }
-        public IConfiguration Configuration { get; }
+        public static IFreeSql Fsql { get; private set; }
+        public static RedisClient Redis { get; private set; }
+        public static IConfiguration Configuration { get; private set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton(Redis);
             services.AddScoped<CustomExceptionFilter>();
             services.AddControllersWithViews().AddNewtonsoftJson();
             services.AddRazorPages();
@@ -67,7 +69,7 @@ namespace BetGame.DDZ.WebHost2
 
             ImHelper.Initialization(new ImClientOptions
             {
-                Redis = RedisHelper.Instance,
+                Redis = Redis,
                 Servers = Configuration["imserver"].Split(';')
             });
 
