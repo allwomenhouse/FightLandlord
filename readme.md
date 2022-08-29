@@ -10,7 +10,7 @@
 
 运行环境：.NET6.0 + redis-server 2.8+
 
-下载 FreeIM 开源代码：
+下载 [FreeIM](https://github.com/2881099/FreeIM) 开源代码：
 
 > cd ImServer && dotnet run --urls=http://*:6001
 
