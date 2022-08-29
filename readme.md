@@ -8,8 +8,6 @@
 
 # 项目演示
 
-> 单机版直接运行 BetGame.DDZ.WebHost
-
 运行环境：.NET6.0 + redis-server 2.8+
 
 下载 FreeIM 开源代码：
