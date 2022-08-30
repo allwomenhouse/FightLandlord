@@ -6,8 +6,8 @@
 
   <ItemGroup>
 	  <PackageReference Include="FreeIM" Version="1.0.0" />
-	  <PackageReference Include="FreeSql.Extensions.BaseEntity" Version="3.2.665" />
-	  <PackageReference Include="FreeSql.Provider.Sqlite" Version="3.2.665" />
+	  <PackageReference Include="FreeSql.Extensions.BaseEntity" Version="3.2.666" />
+	  <PackageReference Include="FreeSql.Provider.Sqlite" Version="3.2.666" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.0" />
   </ItemGroup>
 
